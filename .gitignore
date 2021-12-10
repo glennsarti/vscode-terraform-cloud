@@ -1,0 +1,8 @@
+out/
+node_modules/
+vendor/
+tmp/
+
+// Ignore generated module output
+*.vsix
+.vscode-test
