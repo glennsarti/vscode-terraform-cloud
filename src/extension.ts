@@ -1,76 +1,140 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
-import { RegisterTerrafromCloudAPIAuthenticationProvider } from './providers/authProvider';
-import * as authCommands from './commands/authentication';
+import * as vscode from "vscode";
+import * as config from "./configuration";
+// import { GitExtensionEventEmitter } from "./git/extensionEvents";
+import {
+  registerTerraformCloudTaskProvider,
+  TerraformCloudTaskProvider,
+} from "./providers/taskProvider";
+import {
+  registerTerrafromCloudAPIAuthenticationProvider,
+  TerrafromCloudAPIAuthenticationProvider,
+} from "./providers/authProvider";
+import { registerTerrafromCloudApiCommands } from "./providers/tfcApiCommandsProvider";
+import {
+  registerTerrafromCloudNotificationBarProvider,
+  NotificationBarProvider,
+} from "./providers/notificationBarProvider";
+import {
+  registerTerrafromCloudOrgSelectionProvider,
+  TfcOrgSelectionProvider,
+} from "./providers/tfcOrganizationSelectionProvider";
+import {
+  registerTerrafromCloudRunsTreeDataProvider,
+  TfcRunProvider,
+} from "./providers/treeData/tfcRunProvider";
+import {
+  registerTerrafromCloudWorkspacesTreeDataProvider,
+  TfcWorkspaceProvider,
+} from "./providers/treeData/tfcWorkspaceProvider";
+import {
+  registerTerraformCloudFileSystemProvider,
+  TfcFileSystemProvider,
+} from "./providers/tfcFileSystemProvider";
+import { ITfcSession, TfcSession } from "./tfcSession";
+import * as tfchelper from './tfcHelpers';
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
+// let gitExtensionEvents: GitExtensionEventEmitter;
+
 export function activate(context: vscode.ExtensionContext) {
+  const extConfig: config.IConfiguration = config.configurationFromVscode();
+  const session = new TfcSession(extConfig);
 
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log('Congratulations, your extension "vscode-terramform-cloud" is now active!');
+  const orgSelectionProvider = new TfcOrgSelectionProvider();
+  const runsProvider = new TfcRunProvider(extConfig);
+  const workspacesProvider = new TfcWorkspaceProvider(
+    extConfig,
+    session,
+    runsProvider
+  );
+  const notificationProvider = new NotificationBarProvider(extConfig, session);
+  const authProvider = new TerrafromCloudAPIAuthenticationProvider(
+    context.secrets
+  );
+  const taskProvider = new TerraformCloudTaskProvider(extConfig, session);
+  const tfcFsProvider = new TfcFileSystemProvider(extConfig);
 
   [
-    vscode.commands.registerCommand('vscode-terramform-cloud.helloWorld', () => {
-      // The code you place here will be executed every time your command is executed
-      // Display a message box to the user
-      vscode.window.showInformationMessage('Hello World from vscode-terramform-cloud!');
-    }),
-    RegisterTerrafromCloudAPIAuthenticationProvider(context),
-    authCommands.RegisterTerrafromCloudAPIAuthenticationLoginCommand(),
-    authCommands.RegisterTerrafromCloudAPIAuthenticationReloginCommand()
+    registerTerrafromCloudAPIAuthenticationProvider(
+      context,
+      extConfig,
+      authProvider
+    ),
+    registerTerrafromCloudWorkspacesTreeDataProvider(
+      context,
+      extConfig,
+      session,
+      workspacesProvider
+    ),
+    registerTerrafromCloudOrgSelectionProvider(
+      context,
+      extConfig,
+      orgSelectionProvider,
+      session
+    ),
+    registerTerrafromCloudRunsTreeDataProvider(
+      context,
+      extConfig,
+      runsProvider
+    ),
+    registerTerrafromCloudNotificationBarProvider(notificationProvider),
+    registerTerraformCloudTaskProvider(taskProvider),
+    registerTerrafromCloudApiCommands(extConfig, taskProvider),
+    registerTerraformCloudFileSystemProvider(tfcFsProvider),
+  ]
+    .flat()
+    .forEach((item) => {
+      context.subscriptions.push(item);
+    });
 
-    
+  // session.init();
 
-  ].forEach(pushable => { context.subscriptions.push(pushable)});
+  // TODO make these non-blocking
 
-	// context.subscriptions.push(vscode.authentication.registerAuthenticationProvider(
-	// 	AzureDevOpsAuthenticationProvider.id,
-	// 	'Azure Repos',
-	// 	new AzureDevOpsAuthenticationProvider(context.secrets),
-	// ));
+  postActivate(extConfig, session, workspacesProvider, runsProvider);
 
 
-  // // Example
-  // disposable = vscode.commands.registerCommand('terraform-cloud.login', async () => {
-  //   // Get our PAT session.
-  //   const session = await vscode.authentication.getSession(TerrafromCloudAPIAuthenicationProviderId, [], { createIfNone: true });
 
-  //   try {
+  // TODO: initial Org Id.
+    //session.watchingWorkspaceId = "ws-JAso7iHxDAnLUWCx";
 
-
-  //     vscode.window.showInformationMessage(`Hello ${session.accessToken}`);
-  //     // let tfc = new TerraformCloud(session.accessToken);
-
-  //     // tfc.Account.getDetails().then( account => {
-  //     //   vscode.window.showInformationMessage(`Hello ${account.attributes.username}`);
-  //     // })
-
-
-  //     // // Make a request to the Azure DevOps API. Keep in mind that this particular API only works with PAT's with
-  //     // // 'all organizations' access.
-  //     // const req = await fetch('https://app.vssps.visualstudio.com/_apis/profile/profiles/me?api-version=6.0', {
-  //     //   headers: {
-  //     //     authorization: `Basic ${Buffer.from(`:${session.accessToken}`).toString('base64')}`,
-  //     //     'content-type': 'application/json',
-  //     //   },
-  //     // });
-  //     // if (!req.ok) {
-  //     //   throw new Error(req.statusText);
-  //     // }
-  //     // const res = await req.json() as { displayName: string };
-      
-  //   } catch (e: any) {
-  //     if (e.message === 'Unauthorized') {
-  //       vscode.window.showErrorMessage('Failed to get profile. You need to use a PAT that has access to all organizations. Please sign out and try again.');
-  //     }
-  //     throw e;
-  //   }
+    //markdown.showTfcRunMarkdownPreview(extConfig, 'run-TQ9KtvTf1gDawcNM');
+    //markdown.showTfcRunMarkdownPreview(extConfig, 'run-cuGeiBQPt1MpmJXv');
+  // gitExtensionEvents = new GitExtensionEventEmitter();
+  // gitExtensionEvents.init();
+  // gitExtensionEvents.onGitRepositoriesChanged(async (e: RepositoryList) => {
+  //   // TODO: Convert to a promise-y kind of thing
+  //   const workspace = await tfchelper.findWorkspaceFromRepositoryList(e);
+  //   if (workspace === undefined) { return; }
+  //   const orgId = workspace.relationships?.organization?.data?.id;
+  //   if (orgId === undefined) { return; }
+  //   notificationProvider.startWatch(orgId, workspace.id, workspace.attributes.name);
   // });
-  // context.subscriptions.push(disposable);
 }
 
 // this method is called when your extension is deactivated
-export function deactivate() { }
+export function deactivate() {}
+
+async function postActivate(
+  extConfig: config.IConfiguration,
+  session: ITfcSession,
+  wsProv: TfcWorkspaceProvider,
+  runsProv: TfcRunProvider,
+): Promise<void> {
+  if (extConfig.organization !== undefined) {
+    if (extConfig.workspace !== undefined) {
+      const client = await tfchelper.createClient(extConfig);
+
+      const workspace = await tfchelper.getWorkspaceByName(client, extConfig.organization, extConfig.workspace);
+      wsProv.initProvider(extConfig.organization, workspace?.id);
+      runsProv.initProvider(workspace?.id);
+
+      if (extConfig.watchWorkspaceOnStartup) {
+        session.watchWorkspaceId(workspace?.id);
+      }
+    } else {
+      wsProv.initProvider(extConfig.organization);
+    }
+  }
+}
