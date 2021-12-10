@@ -4,13 +4,16 @@
 	"description": "VSCode Extension for interacting with Terraform Cloud",
 	"version": "0.0.1",
 	"engines": {
-		"vscode": "^1.63.0"
+		"vscode": "^1.60.0"
 	},
 	"categories": [
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:vscode-terramform-cloud.helloWorld"
+		"onCommand:vscode-terramform-cloud.helloWorld",
+		"onCommand:terraform-cloud.login",
+		"onCommand:terraform-cloud.relogin",
+		"onAuthenticationRequest:TerraformCloudAccessToken"
 	],
 	"main": "./out/extension.js",
 	"contributes": {
@@ -18,6 +21,16 @@
 			{
 				"command": "vscode-terramform-cloud.helloWorld",
 				"title": "Hello World"
+			},
+			{
+				"command": "terraform-cloud.login",
+        "category": "Terraform Cloud",
+				"title": "Terraform Cloud: Login"
+			},
+			{
+				"command": "terraform-cloud.relogin",
+        "category": "Terraform Cloud",
+				"title": "Terraform Cloud: Relogin"
 			}
 		]
 	},
@@ -28,6 +41,9 @@
 		"pretest": "npm run compile && npm run lint",
 		"lint": "eslint src --ext ts",
 		"test": "node ./out/test/runTest.js"
+	},
+	"dependencies": {
+		"@skorfmann/terraform-cloud": "^1.10.1"
 	},
 	"devDependencies": {
 		"@types/vscode": "^1.63.0",
