@@ -5,7 +5,8 @@
 		"outDir": "out",
 		"lib": [
 			"ES2020",
-			"dom"
+			"dom",
+			"WebWorker"
 		],
 		"sourceMap": true,
 		"rootDir": "src",
@@ -16,11 +17,12 @@
 		// "noUnusedParameters": true,  /* Report errors on unused parameters. */
 		"allowSyntheticDefaultImports": true
 	},
-	"include": [
-		"src/**/*.ts"
-	],
+	// "include": [
+	// 	"src/**/*.ts"
+	// ],
 	"exclude": [
 		"node_modules",
-		".vscode-test"
+		".vscode-test",
+		"tmp"
 	]
 }

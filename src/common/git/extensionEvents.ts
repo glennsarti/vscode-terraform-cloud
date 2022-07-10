@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as gitext from '../api/git';
+import * as gitext from './gitApi';
 import { RepositoryList, RepositorySummary} from './types';
 
 export class GitExtensionEventEmitter implements vscode.Disposable {

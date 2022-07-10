@@ -5,12 +5,12 @@ import axios from 'axios';
 import type { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import FormData from 'form-data';
 
-import { ApiError } from './ApiError';
-import type { ApiRequestOptions } from './ApiRequestOptions';
-import type { ApiResult } from './ApiResult';
-import { CancelablePromise } from './CancelablePromise';
-import type { OnCancel } from './CancelablePromise';
-import type { OpenAPIConfig } from './OpenAPI';
+import { ApiError } from '../../../common/tfcApi/core/ApiError';
+import type { ApiRequestOptions } from '../../../common/tfcApi/core/ApiRequestOptions';
+import type { ApiResult } from '../../../common/tfcApi/core/ApiResult';
+import { CancelablePromise } from '../../../common/tfcApi/core/CancelablePromise';
+import type { OnCancel } from '../../../common/tfcApi/core/CancelablePromise';
+import type { OpenAPIConfig } from '../../../common/tfcApi/core/OpenAPI';
 
 const isDefined = <T>(value: T | null | undefined): value is Exclude<T, null | undefined> => {
   return value !== undefined && value !== null;

@@ -1,10 +1,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ApiRequestOptions } from './ApiRequestOptions';
-import { BaseHttpRequest } from './BaseHttpRequest';
-import type { CancelablePromise } from './CancelablePromise';
-import type { OpenAPIConfig } from './OpenAPI';
+import type { ApiRequestOptions } from '../../../common/tfcApi/core/ApiRequestOptions';
+import { BaseHttpRequest } from '../../../common/tfcApi/core/BaseHttpRequest';
+import type { CancelablePromise } from '../../../common/tfcApi/core/CancelablePromise';
+import type { OpenAPIConfig } from '../../../common/tfcApi/core/OpenAPI';
 import { request as __request } from './request';
 
 export class AxiosHttpRequest extends BaseHttpRequest {

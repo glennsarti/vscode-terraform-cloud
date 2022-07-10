@@ -45,7 +45,7 @@ export class NotificationBarProvider implements INotificationBarProvider, vscode
     this.statusBarItem.tooltip = "Refreshing Terraform Cloud Workspace...";
 
     if (this.timer !== undefined) { clearTimeout(this.timer); }
-    this.timer = setTimeout(() => { this.doTimerEvent(); }, 0);
+    //this.timer = setTimeout(() => { this.doTimerEvent(); }, 0);
   }
 
   public stopWatch(): void {
@@ -61,7 +61,7 @@ export class NotificationBarProvider implements INotificationBarProvider, vscode
     await this.renderWorkspace();
     if (this.timeDelayMs < DELAY_MINIMUM) { this.timeDelayMs = DELAY_MINIMUM; }
     if (this.timeDelayMs > DELAY_MAXIMUM) { this.timeDelayMs = DELAY_MAXIMUM; }
-    this.timer = setTimeout(() => { this.doTimerEvent(); }, this.timeDelayMs);
+    //this.timer = setTimeout(() => { this.doTimerEvent(); }, this.timeDelayMs);
   }
 
   private async initWatch(): Promise<void> {
@@ -72,7 +72,7 @@ export class NotificationBarProvider implements INotificationBarProvider, vscode
 
     if (this.timer !== undefined) { clearTimeout(this.timer); }
     this.timeDelayMs = DELAY_MINIMUM;
-    this.timer = setTimeout(() => { this.doTimerEvent(); }, 0);
+    //this.timer = setTimeout(() => { this.doTimerEvent(); }, 0);
   };
 
   private async getWorkspaceInfo(): Promise<void> {

@@ -1,6 +1,9 @@
 .vscode/**
 .vscode-test/**
 src/**
+vendor/**
+tools/**
+webpack.*
 .gitignore
 .yarnrc
 vsc-extension-quickstart.md

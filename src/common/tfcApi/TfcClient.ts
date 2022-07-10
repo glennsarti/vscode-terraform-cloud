@@ -3,7 +3,7 @@
 /* eslint-disable */
 import type { BaseHttpRequest } from './core/BaseHttpRequest';
 import type { OpenAPIConfig } from './core/OpenAPI';
-import { AxiosHttpRequest } from './core/AxiosHttpRequest';
+
 
 import { AppliesService } from './services/AppliesService';
 import { CostEstimatesService } from './services/CostEstimatesService';
@@ -15,7 +15,7 @@ import { TaskStagesService } from './services/TaskStagesService';
 import { UsersService } from './services/UsersService';
 import { WorkspacesService } from './services/WorkspacesService';
 
-type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
+export type HttpRequestConstructor = new (config: OpenAPIConfig) => BaseHttpRequest;
 
 export class TfcClient {
 
@@ -31,7 +31,7 @@ export class TfcClient {
 
   public readonly request: BaseHttpRequest;
 
-  constructor(config?: Partial<OpenAPIConfig>, HttpRequest: HttpRequestConstructor = AxiosHttpRequest) {
+  constructor(config: Partial<OpenAPIConfig>, HttpRequest: HttpRequestConstructor) {
     this.request = new HttpRequest({
       BASE: config?.BASE ?? 'https://app.terraform.io/api/v2',
       VERSION: config?.VERSION ?? '0.0.1',
