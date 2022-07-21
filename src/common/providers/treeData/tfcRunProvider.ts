@@ -152,10 +152,10 @@ export function registerTerrafromCloudRunsTreeDataProvider(
 ): vscode.Disposable[] {
   return [
     vscode.window.registerTreeDataProvider('tfcWorkspaceRuns', nodeDependenciesProvider),
-    vscode.commands.registerCommand("terraform-cloud.runs.openInTfc",
+    vscode.commands.registerCommand("terraform-cloud.runsTreeData.openInTfc",
       async (item: ProviderTreeItem) => { doOpenInTfc(config, item); }
     ),
-    vscode.commands.registerCommand("terraform-cloud.runs.viewDetails",
+    vscode.commands.registerCommand("terraform-cloud.runsTreeData.viewDetails",
       async (item: ProviderTreeItem) => { item.showMarkdownPreview(config); }
     )
   ];

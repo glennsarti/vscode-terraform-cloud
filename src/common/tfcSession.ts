@@ -62,7 +62,7 @@ export class TfcSession implements ITfcSession {
   // }
 
   public async init(): Promise<void> {
-    this._organizationId = this.config.organization || "";
+    this._organizationId = ""; // this.config.organization || "";
     this._watchingWorkspaceId = "";
     return this.getOrganization();
   }

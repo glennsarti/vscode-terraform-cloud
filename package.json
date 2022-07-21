@@ -48,43 +48,49 @@
         "title": "Terraform Cloud: Relogin"
       },
       {
-        "command": "terraform-cloud.workspaces.refreshEntry",
+        "command": "terraform-cloud.workspacesTreeData.addOrgWorkspace",
+        "icon": "$(add)",
+        "enablement": "view == tfcWorkspaces",
+        "title": "Add Workspace"
+      },
+      {
+        "command": "terraform-cloud.workspacesTreeData.refreshEntry",
         "icon": "$(refresh)",
         "enablement": "view == tfcWorkspaces",
         "title": "Refresh"
       },
       {
-        "command": "terraform-cloud.workspaces.watchEntry",
+        "command": "terraform-cloud.workspacesTreeData.watchEntry",
         "icon": "$(eye)",
         "enablement": "view == tfcWorkspaces",
         "title": "Watch Workspace"
       },
       {
-        "command": "terraform-cloud.workspaces.openInTfc",
+        "command": "terraform-cloud.workspacesTreeData.openInTfc",
         "icon": "$(cloud)",
         "enablement": "view == tfcWorkspaces",
         "title": "Open in Terraform Cloud"
       },
       {
-        "command": "terraform-cloud.workspaces.viewDetails",
+        "command": "terraform-cloud.workspacesTreeData.viewDetails",
         "icon": "$(note)",
         "enablement": "view == tfcWorkspaces",
         "title": "View Workspace details"
       },
       {
-        "command": "terraform-cloud.runs.openInTfc",
+        "command": "terraform-cloud.runsTreeData.openInTfc",
         "icon": "$(cloud)",
         "enablement": "view == tfcWorkspaceRuns",
         "title": "Open in Terraform Cloud"
       },
       {
-        "command": "terraform-cloud.runs.viewDetails",
+        "command": "terraform-cloud.runsTreeData.viewDetails",
         "icon": "$(note)",
         "enablement": "view == tfcWorkspaceRuns",
         "title": "View Run details"
       },
       {
-        "command": "terraform-cloud.runs.filter",
+        "command": "terraform-cloud.runsTreeData.filter",
         "icon": "$(filter)",
         "enablement": "view == tfcWorkspaceRuns",
         "title": "Filter Runs"
@@ -99,44 +105,49 @@
     "menus": {
       "view/title": [
         {
-          "command": "terraform-cloud.workspaces.refreshEntry",
+          "command": "terraform-cloud.workspacesTreeData.addOrgWorkspace",
           "when": "view == tfcWorkspaces",
           "group": "navigation"
         },
         {
-          "command": "terraform-cloud.runs.filter",
+          "command": "terraform-cloud.workspacesTreeData.refreshEntry",
+          "when": "view == tfcWorkspaces",
+          "group": "navigation"
+        },
+        {
+          "command": "terraform-cloud.runsTreeData.filter",
           "when": "view == tfcWorkspaceRuns",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "terraform-cloud.workspaces.refreshEntry",
+          "command": "terraform-cloud.workspacesTreeData.refreshEntry",
           "when": "view == tfcWorkspaces && viewItem == workspace",
           "group": "inline"
         },
         {
-          "command": "terraform-cloud.workspaces.openInTfc",
+          "command": "terraform-cloud.workspacesTreeData.openInTfc",
           "when": "view == tfcWorkspaces && viewItem == workspace",
           "group": "inline"
         },
         {
-          "command": "terraform-cloud.workspaces.watchEntry",
+          "command": "terraform-cloud.workspacesTreeData.watchEntry",
           "when": "view == tfcWorkspaces && viewItem == workspace",
           "group": "inline"
         },
         {
-          "command": "terraform-cloud.workspaces.viewDetails",
+          "command": "terraform-cloud.workspacesTreeData.viewDetails",
           "when": "view == tfcWorkspaces && viewItem == workspace",
           "group": "inline"
         },
         {
-          "command": "terraform-cloud.runs.openInTfc",
+          "command": "terraform-cloud.runsTreeData.openInTfc",
           "when": "view == tfcWorkspaceRuns && viewItem == run",
           "group": "inline"
         },
         {
-          "command": "terraform-cloud.runs.viewDetails",
+          "command": "terraform-cloud.runsTreeData.viewDetails",
           "when": "view == tfcWorkspaceRuns && viewItem == run",
           "group": "inline"
         }
@@ -145,7 +156,7 @@
     "viewsWelcome": [
       {
         "view": "tfcWorkspaces",
-        "contents": "No organization selected.\n[Select an Organization](command:terraform-cloud.selectOrganization)"
+        "contents": "No workspace selected.\n[Add a Workspace](command:terraform-cloud.workspacesTreeData.addOrgWorkspace)"
       },
       {
         "view": "tfcWorkspaceRuns",
@@ -185,25 +196,25 @@
           "scope": "window",
           "description": "The URL of the Terraform Cloud API endpoints."
         },
-        "terraformCloud.organization": {
-          "type": "string",
+        "terraformCloud.workspaces": {
+          "type": "array",
           "scope": "window",
-          "description": "The initial organization to use when querying Terraform Cloud."
-        },
-        "terraformCloud.workspace": {
-          "type": "string",
-          "scope": "window",
-          "markdownDescription": "The name of the initial workspace to use when querying Terraform Cloud. Only applies when `#terraformCloud.organization#` is set"
+          "description": "The initial list of workspaces to show.",
+          "items": {
+            "type": "string",
+            "title": "Workspace ID in the format of [organization]/[workspace].",
+            "pattern": "[a-zA-Z\\-_]{1,90}/[a-zA-Z\\-_]{1,90}"
+          }
         },
         "terraformCloud.watchWorkspaceOnStartup": {
           "type": "boolean",
           "scope": "window",
-          "markdownDescription": "Enable or Disable automatically watching the initial workspace. Only applies when `#terraformCloud.workspace#` is set"
+          "markdownDescription": "Enable or Disable automatically watching the first workspace in the list. Only applies when `#terraformCloud.workspaces#` is set"
         },
         "terraformCloud.detectWorkspaceOnStartup": {
           "type": "boolean",
           "scope": "window",
-          "markdownDescription": "Enable or Disable detecting the workspace via Git. Only applies when `#terraformCloud.organization#` is set"
+          "markdownDescription": "BROKEN Enable or Disable detecting the workspace via Git. Only applies when `#terraformCloud.organization#` is set"
         }
       }
     }

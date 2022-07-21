@@ -17,10 +17,6 @@ import {
   NotificationBarProvider,
 } from "./providers/notificationBarProvider";
 import {
-  registerTerrafromCloudOrgSelectionProvider,
-  TfcOrgSelectionProvider,
-} from "./providers/tfcOrganizationSelectionProvider";
-import {
   registerTerrafromCloudRunsTreeDataProvider,
   TfcRunProvider,
 } from "./providers/treeData/tfcRunProvider";
@@ -41,7 +37,6 @@ export function activate(context: vscode.ExtensionContext) {
   const extConfig: config.IConfiguration = config.configurationFromVscode();
   const session = new TfcSession(extConfig);
 
-  const orgSelectionProvider = new TfcOrgSelectionProvider();
   const runsProvider = new TfcRunProvider(extConfig);
   const workspacesProvider = new TfcWorkspaceProvider(
     extConfig,
@@ -66,12 +61,6 @@ export function activate(context: vscode.ExtensionContext) {
       extConfig,
       session,
       workspacesProvider
-    ),
-    registerTerrafromCloudOrgSelectionProvider(
-      context,
-      extConfig,
-      orgSelectionProvider,
-      session
     ),
     registerTerrafromCloudRunsTreeDataProvider(
       context,
@@ -122,19 +111,25 @@ async function postActivate(
   wsProv: TfcWorkspaceProvider,
   runsProv: TfcRunProvider,
 ): Promise<void> {
-  if (extConfig.organization !== undefined) {
-    if (extConfig.workspace !== undefined) {
-      const client = await tfchelper.createClient(extConfig);
 
-      const workspace = await tfchelper.getWorkspaceByName(client, extConfig.organization, extConfig.workspace);
-      wsProv.initProvider(extConfig.organization, workspace?.id);
-      runsProv.initProvider(workspace?.id);
+  wsProv.initProvider(extConfig.workspaces, extConfig.defaultWorkspace);
 
-      if (extConfig.watchWorkspaceOnStartup) {
-        session.watchWorkspaceId(workspace?.id);
-      }
-    } else {
-      wsProv.initProvider(extConfig.organization);
-    }
+  // Perform actions only for default workspace.
+  if (extConfig.defaultWorkspace && extConfig.defaultWorkspace.valid()) {
+    const defn = extConfig.defaultWorkspace as config.WorkspaceDefinition;
+    new Promise((_resolve, _reject) => {
+      tfchelper.createClient(extConfig).then((client) => {
+        tfchelper.getWorkspaceByName(client, defn.organizationName, defn.workspaceName, true).then((ws) => {
+          if (ws !== undefined) {
+            // We now have the Default Workspace Id
+            runsProv.initProvider(ws.id);
+
+            if (extConfig.watchWorkspaceOnStartup) {
+              session.watchWorkspaceId(ws.id);
+            }
+          }
+        });
+      });
+    });
   }
 }

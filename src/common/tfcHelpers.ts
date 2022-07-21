@@ -138,12 +138,11 @@ export async function getOrganization(
     }
   );
 }
-
-export async function getOrganizationWorkspaces(
+export async function getOrganizationIdWorkspaces(
   client: tfc.TfcClient,
-  org: tfc.Organization
+  organizationId: string
 ): Promise<tfc.Workspace[]> {
-  return client.organizations.listWorkspaces(org.attributes.name).then(
+  return client.organizations.listWorkspaces(organizationId).then(
     (response) => {
       // Cache it!
       response.data.forEach((workspace: tfc.Workspace) => {
@@ -152,6 +151,13 @@ export async function getOrganizationWorkspaces(
       return response.data;
     }
   );
+}
+
+export async function getOrganizationWorkspaces(
+  client: tfc.TfcClient,
+  org: tfc.Organization
+): Promise<tfc.Workspace[]> {
+  return getOrganizationIdWorkspaces(client, org.attributes.name);
 }
 
 export async function getWorkspace(
@@ -189,10 +195,20 @@ export async function getWorkspaceByName(
   client: tfc.TfcClient | undefined,
   orgName: string,
   workspaceName: string,
+  useCache: boolean = false,
 ): Promise<tfc.Workspace | undefined> {
   if (client === undefined || orgName === "" || workspaceName === "") {
     return undefined;
   }
+  if (useCache) {
+    // TODO
+    // // Is it in the cache?
+    // let ws = workspaceCache.get(workspaceId);
+    // if (ws !== undefined) {
+    //   return ws;
+    // }
+  }
+
   // Fetch it
   return client.workspaces.showWorkspaceByName(orgName, workspaceName).then(
     (response) => {

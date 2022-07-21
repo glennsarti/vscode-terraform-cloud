@@ -20,10 +20,10 @@ export class NotificationBarProvider implements INotificationBarProvider, vscode
   private orgId: string = "";
   private workspaceId: string = "";
   private workspaceName: string = "";
-  private workspace?: tfc.Workspace = undefined;
+  private workspace?: tfc.Workspace;
   private runs: Map<string, tfc.Run> = new Map<string, tfc.Run>();
   private isWatching: boolean = false;
-  private timer?: NodeJS.Timeout = undefined;
+  private timer?: ReturnType<typeof setTimeout>;
   private timeDelayMs: number = 0.0;
   private config: IConfiguration;
 
@@ -45,7 +45,7 @@ export class NotificationBarProvider implements INotificationBarProvider, vscode
     this.statusBarItem.tooltip = "Refreshing Terraform Cloud Workspace...";
 
     if (this.timer !== undefined) { clearTimeout(this.timer); }
-    //this.timer = setTimeout(() => { this.doTimerEvent(); }, 0);
+    this.timer = setTimeout(() => { this.doTimerEvent(); }, 0);
   }
 
   public stopWatch(): void {
@@ -61,7 +61,7 @@ export class NotificationBarProvider implements INotificationBarProvider, vscode
     await this.renderWorkspace();
     if (this.timeDelayMs < DELAY_MINIMUM) { this.timeDelayMs = DELAY_MINIMUM; }
     if (this.timeDelayMs > DELAY_MAXIMUM) { this.timeDelayMs = DELAY_MAXIMUM; }
-    //this.timer = setTimeout(() => { this.doTimerEvent(); }, this.timeDelayMs);
+    this.timer = setTimeout(() => { this.doTimerEvent(); }, this.timeDelayMs);
   }
 
   private async initWatch(): Promise<void> {
@@ -72,7 +72,7 @@ export class NotificationBarProvider implements INotificationBarProvider, vscode
 
     if (this.timer !== undefined) { clearTimeout(this.timer); }
     this.timeDelayMs = DELAY_MINIMUM;
-    //this.timer = setTimeout(() => { this.doTimerEvent(); }, 0);
+    this.timer = setTimeout(() => { this.doTimerEvent(); }, 0);
   };
 
   private async getWorkspaceInfo(): Promise<void> {
