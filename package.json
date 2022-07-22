@@ -96,10 +96,10 @@
         "title": "Filter Runs"
       },
       {
-        "command": "terraform-cloud.selectOrganization",
-        "icon": "$(cloud)",
-        "category": "Terraform Cloud",
-        "title": "Terraform Cloud: Select Organization"
+        "command": "terraform-cloud.runsTreeData.refreshEntry",
+        "icon": "$(refresh)",
+        "enablement": "view == tfcWorkspaceRuns",
+        "title": "Refresh"
       }
     ],
     "menus": {
@@ -118,6 +118,11 @@
           "command": "terraform-cloud.runsTreeData.filter",
           "when": "view == tfcWorkspaceRuns",
           "group": "navigation"
+        },
+        {
+          "command": "terraform-cloud.runsTreeData.refreshEntry",
+          "when": "view == tfcWorkspaceRuns",
+          "group": "navigation"
         }
       ],
       "view/item/context": [
@@ -127,8 +132,18 @@
           "group": "inline"
         },
         {
+          "command": "terraform-cloud.workspacesTreeData.refreshEntry",
+          "when": "view == tfcWorkspaces && viewItem == organization",
+          "group": "inline"
+        },
+        {
           "command": "terraform-cloud.workspacesTreeData.openInTfc",
           "when": "view == tfcWorkspaces && viewItem == workspace",
+          "group": "inline"
+        },
+        {
+          "command": "terraform-cloud.workspacesTreeData.openInTfc",
+          "when": "view == tfcWorkspaces && viewItem == organization",
           "group": "inline"
         },
         {

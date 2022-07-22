@@ -6,7 +6,8 @@ import * as tfchelper from '../../tfcHelpers';
 
 export interface ITfcRunProvider {
   initProvider(workspaceId?: string): void;
-  refresh(workspaceId: string): void
+  setWorkspaceId(workspaceId: string): void;
+  refresh(item?: ProviderTreeItem): void;
 }
 
 export class TfcRunProvider implements ITfcRunProvider,vscode.TreeDataProvider<ProviderTreeItem> {
@@ -27,7 +28,11 @@ export class TfcRunProvider implements ITfcRunProvider,vscode.TreeDataProvider<P
     this._onDidChangeTreeData.fire();
   }
 
-  refresh(workspaceId: string): void {
+  refresh(item?: ProviderTreeItem): void {
+    this._onDidChangeTreeData.fire(item);
+  }
+
+  setWorkspaceId(workspaceId: string): void {
     this.workspaceId = workspaceId;
     this._onDidChangeTreeData.fire();
   }
@@ -148,15 +153,18 @@ async function doOpenInTfc(config: IConfiguration, item: ProviderTreeItem): Prom
 export function registerTerrafromCloudRunsTreeDataProvider(
   _context: vscode.ExtensionContext,
   config: IConfiguration,
-  nodeDependenciesProvider: TfcRunProvider
+  runProvider: TfcRunProvider
 ): vscode.Disposable[] {
   return [
-    vscode.window.registerTreeDataProvider('tfcWorkspaceRuns', nodeDependenciesProvider),
+    vscode.window.registerTreeDataProvider('tfcWorkspaceRuns', runProvider),
     vscode.commands.registerCommand("terraform-cloud.runsTreeData.openInTfc",
       async (item: ProviderTreeItem) => { doOpenInTfc(config, item); }
     ),
     vscode.commands.registerCommand("terraform-cloud.runsTreeData.viewDetails",
       async (item: ProviderTreeItem) => { item.showMarkdownPreview(config); }
-    )
+    ),
+    vscode.commands.registerCommand("terraform-cloud.runsTreeData.refreshEntry",
+      (item: ProviderTreeItem) => { runProvider.refresh(item); }
+    ),
   ];
 }

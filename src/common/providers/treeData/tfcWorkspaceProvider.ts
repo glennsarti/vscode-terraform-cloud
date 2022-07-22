@@ -76,7 +76,7 @@ export class TfcWorkspaceProvider
   }
 
   showRuns(workspaceId: string): void {
-    this.runProvider.refresh(workspaceId);
+    this.runProvider.setWorkspaceId(workspaceId);
   }
 
   getTreeItem(element: ProviderTreeItem): vscode.TreeItem {
