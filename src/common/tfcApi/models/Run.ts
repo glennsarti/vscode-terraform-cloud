@@ -42,6 +42,7 @@ refresh?: boolean;
 'plan-queueable-at'?: string;
 'planned-at'?: string;
 'post-plan-completed-at'?: string;
+'pre-plan-completed-at'?: string;
 };
 source?: string;
 status: RunStatus;

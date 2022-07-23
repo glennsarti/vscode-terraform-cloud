@@ -214,9 +214,7 @@ export const sendRequest = async (
 
   onCancel(() => controller.abort());
 
-  const resp = await fetch(url, request);
-
-  return resp;
+  return await fetch(url, request);
 };
 
 const getResponseHeader = (response: Response, responseHeader?: string): string | undefined => {
@@ -283,14 +281,7 @@ export const request = <T>(config: OpenAPIConfig, options: ApiRequestOptions): C
       const url = getUrl(config, options);
       const formData = getFormData(options);
       const body = getRequestBody(options);
-
       const headers = await getHeaders(config, options);
-
-      console.log("outputing headers -----------------");
-      headers.forEach((value, key) => {
-        console.log(`key ${key}  =  ${value}`);
-      })
-      console.log("end headers -----------------");
 
       if (!onCancel.isCancelled) {
         const response = await sendRequest(config, options, url, body, formData, headers, onCancel);

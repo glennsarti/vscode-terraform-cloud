@@ -116,9 +116,10 @@ export class TfcCreateRunTerminal extends TerraformCloudTaskTerminal {
 }
 
 class SeenRunTimeStamps {
-  plannedAt?: string;
   appliedAt?: string;
+  plannedAt?: string;
   postPlanCompletedAt?: string;
+  prePlanCompletedAt?: string;
 }
 
 class RunStatusPoller {
@@ -219,6 +220,22 @@ class RunStatusPoller {
   ): Promise<void> {
     // Order is important : Should be in the same
     // order you would see in a run
+
+    // Pre-Plan
+    if (
+      this.seen.prePlanCompletedAt !==
+      run.attributes["status-timestamps"]?.["pre-plan-completed-at"]
+    ) {
+      this.seen.prePlanCompletedAt =
+        run.attributes["status-timestamps"]?.["pre-plan-completed-at"];
+      await this.writeRunTaskStage(client, run, "pre_plan");
+    }
+
+    if (this.cancelToken.isCancellationRequested) {
+      return;
+    }
+
+    // Plan
     if (
       this.seen.plannedAt !==
       run.attributes["status-timestamps"]?.["planned-at"]
@@ -231,6 +248,7 @@ class RunStatusPoller {
       return;
     }
 
+    // Post-Plan
     if (
       this.seen.postPlanCompletedAt !==
       run.attributes["status-timestamps"]?.["post-plan-completed-at"]
@@ -244,6 +262,7 @@ class RunStatusPoller {
       return;
     }
 
+    // Apply
     if (
       this.seen.appliedAt !==
       run.attributes["status-timestamps"]?.["applied-at"]
@@ -350,7 +369,7 @@ class RunStatusPoller {
       if (taskResult.attributes.message !== undefined) {
         detail += `${this.sanitizeMessage(taskResult.attributes.message)}\r\n`;
       }
-      if (taskResult.attributes.url !== undefined) {
+      if (taskResult.attributes.url !== undefined && taskResult.attributes.url !== null) {
         detail += `${taskResult.attributes.url}\r\n`;
       }
       if (detail !== "") {

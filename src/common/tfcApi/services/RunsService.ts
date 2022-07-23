@@ -183,13 +183,27 @@ pagination?: MetaPagination;
   }
 
   /**
-   * Lists all runs in a workspace
+   * Lists runs in a workspace
    * @param workspaceId The id of the workspace
+   * @param pageNumber The page to request. Defaults to the first page
+   * @param pageSize The page size to request. Defaults to the 20.
+   * @param filterOperation List runs with the specified operations
+   * @param filterSource List runs with the specified sources
+   * @param filterStatus List runs with the specified statuses
+   * @param searchCommit List runs for the specified commit SHA
+   * @param searchUser List runs for the specified user
    * @returns any List Runs Response
    * @throws ApiError
    */
   public listWorkspaceRuns(
 workspaceId: string,
+pageNumber?: number,
+pageSize: number = 20,
+filterOperation?: Array<'plan_only' | 'plan_and_apply' | 'refresh_only' | 'destroy' | 'empty_apply'>,
+filterSource?: Array<'tfe-ui' | 'tfe-api' | 'tfe-configuration-version'>,
+filterStatus?: Array<'pending' | 'fetching' | 'plan_queued' | 'planning' | 'planned' | 'cost_estimating' | 'cost_estimated' | 'policy_checking' | 'policy_override' | 'policy_soft_failed' | 'policy_checked' | 'confirmed' | 'post_plan_running' | 'post_plan_completed' | 'planned_and_finished' | 'apply_queued' | 'applying' | 'applied' | 'discarded' | 'errored' | 'canceled' | 'force_canceled'>,
+searchCommit?: string,
+searchUser?: string,
 ): CancelablePromise<{
 data: Array<Run>;
 meta?: {
@@ -201,6 +215,15 @@ pagination?: MetaPagination;
       url: '/workspaces/{workspace_id}/runs',
       path: {
         'workspace_id': workspaceId,
+      },
+      query: {
+        'page[number]': pageNumber,
+        'page[size]': pageSize,
+        'filter[operation]': filterOperation,
+        'filter[source]': filterSource,
+        'filter[status]': filterStatus,
+        'search[commit]': searchCommit,
+        'search[user]': searchUser,
       },
       errors: {
         404: `HTTP 404 Not Found Response`,
