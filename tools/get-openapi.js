@@ -2,6 +2,18 @@ var http = require('https');
 var fs = require('fs');
 var path = require('path');
 
+
+// DEBUG
+
+fs.copyFileSync(
+  "../openapi-terraform-cloud/specifications/openapi-terraform-cloud.yaml",
+  "./vendor/openapi-terraform-cloud.yaml"
+);
+
+process.exit(0);
+
+
+
 var download = function (url, dest, cb) {
   var file = fs.createWriteStream(dest);
   console.log(`Attempting to download ${url} ...`);
