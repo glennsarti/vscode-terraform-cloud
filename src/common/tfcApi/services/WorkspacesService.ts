@@ -13,6 +13,32 @@ export class WorkspacesService {
   constructor(public readonly httpRequest: BaseHttpRequest) {}
 
   /**
+   * Lists all workspaces in an organization
+   * @param organizationName The name of the organization
+   * @returns any List Workspaces Response
+   * @throws ApiError
+   */
+  public listWorkspaces(
+organizationName: string,
+): CancelablePromise<{
+data: Array<Workspace>;
+meta?: {
+pagination?: MetaPagination;
+};
+}> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/organizations/{organization_name}/workspaces',
+      path: {
+        'organization_name': organizationName,
+      },
+      errors: {
+        404: `HTTP 404 Not Found Response`,
+      },
+    });
+  }
+
+  /**
    * Show a workspace in an organization
    * @param organizationName The name of the organization
    * @param workspaceName The name of the workspace to show
@@ -34,6 +60,87 @@ data: Workspace;
       },
       errors: {
         404: `HTTP 404 Not Found Response`,
+      },
+    });
+  }
+
+  /**
+   * Show a workspace
+   * @param workspaceId The id of the workspace
+   * @returns any Show Workspace Response
+   * @throws ApiError
+   */
+  public showWorkspace(
+workspaceId: string,
+): CancelablePromise<{
+data: Workspace;
+}> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/workspaces/{workspace_id}',
+      path: {
+        'workspace_id': workspaceId,
+      },
+      errors: {
+        404: `HTTP 404 Not Found Response`,
+      },
+    });
+  }
+
+  /**
+   * Lock a workspace
+   * @param workspaceId The id of the workspace
+   * @param requestBody Workspace Lock action comment
+   * @returns any Show Workspace Response
+   * @throws ApiError
+   */
+  public lockWorkspace(
+workspaceId: string,
+requestBody?: {
+comment?: string;
+},
+): CancelablePromise<{
+data: Workspace;
+}> {
+    return this.httpRequest.request({
+      method: 'POST',
+      url: '/workspaces/{workspace_id}/actions/lock',
+      path: {
+        'workspace_id': workspaceId,
+      },
+      body: requestBody,
+      mediaType: 'application/vnd.api+json',
+      errors: {
+        404: `HTTP 404 Not Found Response`,
+        409: `HTTP 409 Conflict Response`,
+      },
+    });
+  }
+
+  /**
+   * Unlock a workspace
+   * @param workspaceId The id of the workspace
+   * @param requestBody A request which cannot contain any information
+   * @returns any Show Workspace Response
+   * @throws ApiError
+   */
+  public unlockWorkspace(
+workspaceId: string,
+requestBody?: any,
+): CancelablePromise<{
+data: Workspace;
+}> {
+    return this.httpRequest.request({
+      method: 'POST',
+      url: '/workspaces/{workspace_id}/actions/unlock',
+      path: {
+        'workspace_id': workspaceId,
+      },
+      body: requestBody,
+      mediaType: 'application/vnd.api+json',
+      errors: {
+        404: `HTTP 404 Not Found Response`,
+        409: `HTTP 409 Conflict Response`,
       },
     });
   }
@@ -80,55 +187,6 @@ pagination?: MetaPagination;
         'filter[status]': filterStatus,
         'search[commit]': searchCommit,
         'search[user]': searchUser,
-      },
-      errors: {
-        404: `HTTP 404 Not Found Response`,
-      },
-    });
-  }
-
-  /**
-   * Show a workspace
-   * @param workspaceId The id of the workspace
-   * @returns any Show Workspace Response
-   * @throws ApiError
-   */
-  public showWorkspace(
-workspaceId: string,
-): CancelablePromise<{
-data: Workspace;
-}> {
-    return this.httpRequest.request({
-      method: 'GET',
-      url: '/workspaces/{workspace_id}',
-      path: {
-        'workspace_id': workspaceId,
-      },
-      errors: {
-        404: `HTTP 404 Not Found Response`,
-      },
-    });
-  }
-
-  /**
-   * Lists all workspaces in an organization
-   * @param organizationName The name of the organization
-   * @returns any List Workspaces Response
-   * @throws ApiError
-   */
-  public listWorkspaces(
-organizationName: string,
-): CancelablePromise<{
-data: Array<Workspace>;
-meta?: {
-pagination?: MetaPagination;
-};
-}> {
-    return this.httpRequest.request({
-      method: 'GET',
-      url: '/organizations/{organization_name}/workspaces',
-      path: {
-        'organization_name': organizationName,
       },
       errors: {
         404: `HTTP 404 Not Found Response`,

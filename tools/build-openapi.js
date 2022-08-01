@@ -49,16 +49,17 @@ function moveAndMungeFile(fromPath, toPath, subdir, filename, mungePath) {
 }
 
 function mungeFetchRequest(fetchReqPath) {
-  // Hackily munge the request.ts file
-  let content = fs.readFileSync(fetchReqPath, 'utf8');
+  // TODO: Nothing to munge
+  // // Hackily munge the request.ts file
+  // let content = fs.readFileSync(fetchReqPath, 'utf8');
 
-  // Add in the no-cors request init
-  content = content.replace(
-    "const request: RequestInit = {",
-    "const request: RequestInit = {\n    mode: 'no-cors',"
-  );
+  // // Add in the no-cors request init
+  // content = content.replace(
+  //   "const request: RequestInit = {",
+  //   "const request: RequestInit = {\n    mode: 'no-cors',"
+  // );
 
-  fs.writeFileSync(fetchReqPath, content, { encoding: 'utf8' });
+  // fs.writeFileSync(fetchReqPath, content, { encoding: 'utf8' });
 }
 
 function mungeCommon(cmnPath) {

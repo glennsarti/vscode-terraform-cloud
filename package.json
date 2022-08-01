@@ -7,6 +7,12 @@
     "name": "Glenn Sarti"
   },
   "version": "0.0.1",
+  "components": {
+    "openapi": {
+      "release-disabled": "0.0.1",
+      "file": "../openapi-terraform-cloud/specifications/openapi-terraform-cloud.yaml"
+    }
+  },
   "engines": {
     "vscode": "^1.63.0"
   },
@@ -249,12 +255,12 @@
     "test": "node ./out/test/runTest.js",
     "test-web": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js",
     "run-in-browser": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. .",
-    "openapi:download": "node tools/get-openapi.js",
-    "openapi:clean": "node tools/clean-dir.js src/common/tfcApi",
+    "openapi:clean": "node tools/clean-dir.js src/common/tfcApi && node tools/clean-dir.js src/node/tfcApi && node tools/clean-dir.js src/browser/tfcApi",
     "openapi:build": "node tools/build-openapi.js",
     "openapi:build:node": "openapi -i vendor/openapi-terraform-cloud.yaml --client axios --indent 2 --name TfcClient",
     "openapi:build:web": "openapi -i vendor/openapi-terraform-cloud.yaml --client fetch --indent 2 --name TfcClient",
-    "vendor": "npm run openapi:download && npm run openapi:clean && npm run openapi:build"
+    "vendor": "npm run vendor:download && npm run openapi:clean && npm run openapi:build",
+    "vendor:download": "node tools/vendor-components.js"
   },
   "dependencies": {
   },

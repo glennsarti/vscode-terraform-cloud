@@ -62,6 +62,8 @@ async function notificationBarCommand(
     case APPROVE_RUN_COMMAND:
       vscode.commands.executeCommand(result.commandName, currentRun);
       break;
+    case UNLOCK_WORKSPACE_COMMAND:
+      vscode.commands.executeCommand(result.commandName, workspace);
     }
 }
 
@@ -128,6 +130,33 @@ async function cancelRunCommand(config: IConfiguration, run: tfc.Run): Promise<v
   vscode.window.showInformationMessage(`Run '${run.id}' has been canceled.`);
 }
 
+async function unlockWorkspaceCommand(config: IConfiguration, workspace: tfc.Workspace): Promise<void> {
+  // TODO: Check if the run is cancelable... tfchelper.runIsCancelable(currentRun)
+
+  const client = await tfchelper.createClient(config);
+  try {
+    // await client.workspaces.unlockWorkspace(workspace.id, {
+    //   comment: "Hello"
+    // });
+    await client.workspaces.unlockWorkspace(workspace.id);
+  } catch (e: any) {
+    if (e instanceof tfc.ApiError) {
+      // HTTP 401 Unauthorized
+      if (e.status === 401) {
+        vscode.window.showErrorMessage(
+          "Failed to get the selected Organization. You need to use an Access Token that has access to all organizations. Please sign out and try again."
+        );
+      }
+      // HTTP 404 Not Found
+      if (e.status === 404) {
+        return undefined;
+      }
+    }
+  }
+
+  vscode.window.showInformationMessage(`Workspace '${workspace.attributes.name}' has been unlocked.`);
+}
+
 export function registerTerrafromCloudApiCommands(
   config: IConfiguration,
   taskProvider: ITerraformCloudTaskProvider,
@@ -144,6 +173,9 @@ export function registerTerrafromCloudApiCommands(
     }),
     vscode.commands.registerCommand(CANCEL_RUN_COMMAND, async (run: tfc.Run) => {
       cancelRunCommand(config, run);
+    }),
+    vscode.commands.registerCommand(UNLOCK_WORKSPACE_COMMAND, async (ws: tfc.Workspace) => {
+      unlockWorkspaceCommand(config, ws);
     }),
   ];
 }
