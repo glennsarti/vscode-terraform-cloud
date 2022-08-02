@@ -194,6 +194,11 @@ export class NotificationBarProvider implements INotificationBarProvider, vscode
       this.refresh();
     });
 
+    session.onChangeInWorkspace((workspace) => {
+      if (workspace !== undefined && workspace.id === this.workspaceId) {
+        this.refresh();
+      }
+    });
   }
 }
 

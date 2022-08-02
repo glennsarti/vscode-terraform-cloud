@@ -69,7 +69,7 @@ export function activate(context: vscode.ExtensionContext) {
     ),
     registerTerrafromCloudNotificationBarProvider(notificationProvider),
     registerTerraformCloudTaskProvider(taskProvider),
-    registerTerrafromCloudApiCommands(extConfig, taskProvider),
+    registerTerrafromCloudApiCommands(extConfig, session, taskProvider),
     registerTerraformCloudFileSystemProvider(tfcFsProvider),
   ]
     .flat()

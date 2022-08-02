@@ -5,13 +5,16 @@ import * as tfchelper from "./tfcHelpers";
 
 export interface ITfcSession {
   organizationId: string;
-  onChangeOrganization: vscode.Event<tfc.Organization | undefined>
+  onChangeOrganization: vscode.Event<tfc.Organization | undefined>;
 
   watchingWorkspaceId: string;
   watchingWorkspace: tfc.Workspace | undefined;
   isWatchingWorkspace: boolean;
-  watchWorkspaceId(id?: string): void
-  onWatchingWorkspace: vscode.Event<tfc.Workspace | undefined>
+  watchWorkspaceId(id?: string): void;
+  onWatchingWorkspace: vscode.Event<tfc.Workspace | undefined>;
+
+  onChangeInWorkspace: vscode.Event<tfc.Workspace | undefined>;
+  changeInWorkspace(ws: tfc.Workspace): void;
 }
 
 export class TfcSession implements ITfcSession {
@@ -20,6 +23,9 @@ export class TfcSession implements ITfcSession {
 
   private watchingWorkspaceEmitter = new vscode.EventEmitter<tfc.Workspace | undefined>();
   onWatchingWorkspace: vscode.Event<tfc.Workspace | undefined> = this.watchingWorkspaceEmitter.event;
+
+  private onChangeInWorkspaceEmitter = new vscode.EventEmitter<tfc.Workspace | undefined>();
+  onChangeInWorkspace: vscode.Event<tfc.Workspace | undefined> = this.onChangeInWorkspaceEmitter.event;
 
   private config: IConfiguration;
   private _organizationId: string = "";
@@ -105,6 +111,10 @@ export class TfcSession implements ITfcSession {
       }
       throw e;
     }
+  }
+
+  changeInWorkspace(ws: tfc.Workspace): void {
+    this.onChangeInWorkspaceEmitter.fire(ws);
   }
 
   // private async getWatchingWorkspaceByName(workspaceName: string): Promise<void> {

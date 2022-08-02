@@ -4,12 +4,14 @@ import * as tfchelper from "../tfcHelpers";
 import { IConfiguration } from "../configuration";
 import { TfcCreateRunDefinition } from "./taskTerminals/createRunTerminal";
 import { ITerraformCloudTaskProvider } from "./taskProvider";
+import { ITfcSession } from "../tfcSession";
 
 export const APPROVE_RUN_COMMAND = "terraform-cloud.approve-run.command";
 export const CANCEL_RUN_COMMAND = "terraform-cloud.cancel-run.command";
 export const CREATE_RUN_COMMAND = "terraform-cloud.create-run.command";
 export const DISCARD_RUN_COMMAND = "terraform-cloud.discard-run.command";
 export const FORCE_UNLOCK_WORKSPACE_COMMAND = "terraform-cloud.force-unlock-workspace.command";
+export const LOCK_WORKSPACE_COMMAND = "terraform-cloud.lock-workspace.command";
 export const UNLOCK_WORKSPACE_COMMAND = "terraform-cloud.unlock-workspace.command";
 export const WORKSPACE_AND_RUN_PICKER_COMMAND = "terraform-cloud.workspace-current-run.picker";
 
@@ -30,6 +32,10 @@ async function notificationBarCommand(
     } else if (workspace.attributes.permissions["can-force-unlock"] === true) {
       items.push({ label: '$(unlock) Force unlock workspace', description: `Force unlock the '${workspace.attributes.name}' workspace.`, commandName: FORCE_UNLOCK_WORKSPACE_COMMAND });
     }
+  }
+
+  if (!workspace.attributes.locked && workspace.attributes.permissions["can-lock"]) {
+    items.push({ label: '$(lock) Lock workspace', description: `Lock the '${workspace.attributes.name}' workspace.`, commandName: LOCK_WORKSPACE_COMMAND });
   }
 
   if (currentRun !== undefined) {
@@ -63,6 +69,7 @@ async function notificationBarCommand(
       vscode.commands.executeCommand(result.commandName, currentRun);
       break;
     case UNLOCK_WORKSPACE_COMMAND:
+    case LOCK_WORKSPACE_COMMAND:
       vscode.commands.executeCommand(result.commandName, workspace);
     }
 }
@@ -130,15 +137,18 @@ async function cancelRunCommand(config: IConfiguration, run: tfc.Run): Promise<v
   vscode.window.showInformationMessage(`Run '${run.id}' has been canceled.`);
 }
 
-async function unlockWorkspaceCommand(config: IConfiguration, workspace: tfc.Workspace): Promise<void> {
-  // TODO: Check if the run is cancelable... tfchelper.runIsCancelable(currentRun)
-
+async function unlockWorkspaceCommand(config: IConfiguration, session: ITfcSession, workspace: tfc.Workspace): Promise<void> {
   const client = await tfchelper.createClient(config);
   try {
-    // await client.workspaces.unlockWorkspace(workspace.id, {
-    //   comment: "Hello"
-    // });
-    await client.workspaces.unlockWorkspace(workspace.id);
+    // The {} is a hack to force the correct client behaviour and send a content-type
+    const result = await client.workspaces.unlockWorkspace(workspace.id, {});
+
+    if (result.data.attributes.locked !== false) {
+      vscode.window.showErrorMessage(`Failed to unlock Workspace '${workspace.attributes.name}'`);
+    } else {
+      vscode.window.showInformationMessage(`Workspace '${workspace.attributes.name}' has been unlocked.`);
+      session.changeInWorkspace(workspace);
+    }
   } catch (e: any) {
     if (e instanceof tfc.ApiError) {
       // HTTP 401 Unauthorized
@@ -146,19 +156,56 @@ async function unlockWorkspaceCommand(config: IConfiguration, workspace: tfc.Wor
         vscode.window.showErrorMessage(
           "Failed to get the selected Organization. You need to use an Access Token that has access to all organizations. Please sign out and try again."
         );
+        return;
       }
-      // HTTP 404 Not Found
-      if (e.status === 404) {
-        return undefined;
-      }
+      vscode.window.showErrorMessage(`Failed to unlock Workspace '${workspace.attributes.name}': ${e}`);
+      return;
     }
+    throw e;
+  }
+}
+
+async function lockWorkspaceCommand(config: IConfiguration, session: ITfcSession, workspace: tfc.Workspace): Promise<void> {
+  // TODO: Check if the workspace is lockable
+
+  const comment = await vscode.window.showInputBox({
+    title: "Lock a workspace - Enter a comment for the reason",
+    placeHolder: "Optional comment",
+  });
+
+  if (comment === undefined) {
+    return;
   }
 
-  vscode.window.showInformationMessage(`Workspace '${workspace.attributes.name}' has been unlocked.`);
+  const client = await tfchelper.createClient(config);
+  try {
+    const result = await client.workspaces.lockWorkspace(workspace.id, { comment: comment });
+
+    if (result.data.attributes.locked !== true) {
+      vscode.window.showErrorMessage(`Failed to lock Workspace '${workspace.attributes.name}'`);
+    } else {
+      vscode.window.showInformationMessage(`Workspace '${workspace.attributes.name}' has been locked.`);
+      session.changeInWorkspace(workspace);
+    }
+  } catch (e: any) {
+    if (e instanceof tfc.ApiError) {
+      // HTTP 401 Unauthorized
+      if (e.status === 401) {
+        vscode.window.showErrorMessage(
+          "Failed to get the selected Organization. You need to use an Access Token that has access to all organizations. Please sign out and try again."
+        );
+        return;
+      }
+      vscode.window.showErrorMessage(`Failed to lock Workspace '${workspace.attributes.name}': ${e}`);
+      return;
+    }
+    throw e;
+  }
 }
 
 export function registerTerrafromCloudApiCommands(
   config: IConfiguration,
+  session: ITfcSession,
   taskProvider: ITerraformCloudTaskProvider,
 ) {
   return [
@@ -175,7 +222,10 @@ export function registerTerrafromCloudApiCommands(
       cancelRunCommand(config, run);
     }),
     vscode.commands.registerCommand(UNLOCK_WORKSPACE_COMMAND, async (ws: tfc.Workspace) => {
-      unlockWorkspaceCommand(config, ws);
+      unlockWorkspaceCommand(config, session, ws);
+    }),
+    vscode.commands.registerCommand(LOCK_WORKSPACE_COMMAND, async (ws: tfc.Workspace) => {
+      lockWorkspaceCommand(config, session, ws);
     }),
   ];
 }
