@@ -20,7 +20,7 @@ export type OpenAPIConfig = {
 
 export const OpenAPI: OpenAPIConfig = {
   BASE: 'https://app.terraform.io/api/v2',
-  VERSION: '0.0.1',
+  VERSION: '0.0.2',
   WITH_CREDENTIALS: false,
   CREDENTIALS: 'include',
   TOKEN: undefined,

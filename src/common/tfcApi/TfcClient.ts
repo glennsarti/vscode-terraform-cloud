@@ -34,7 +34,7 @@ export class TfcClient {
   constructor(config: Partial<OpenAPIConfig>, HttpRequest: HttpRequestConstructor) {
     this.request = new HttpRequest({
       BASE: config?.BASE ?? 'https://app.terraform.io/api/v2',
-      VERSION: config?.VERSION ?? '0.0.1',
+      VERSION: config?.VERSION ?? '0.0.2',
       WITH_CREDENTIALS: config?.WITH_CREDENTIALS ?? false,
       CREDENTIALS: config?.CREDENTIALS ?? 'include',
       TOKEN: config?.TOKEN,

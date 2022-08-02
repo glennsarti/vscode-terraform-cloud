@@ -39,17 +39,16 @@ function getUrlAsPromise(url) {
   });
 }
 
-async function downloadAsync(url, dest) {
+async function downloadAsync(url) {
   try {
     let promise = getUrlAsPromise(url);
     let response = await promise;
 
-
     if (response.resultCode === 302) {
-      await downloadAsync(response.redirect, dest);
+      return await downloadAsync(response.redirect);
     }
 
-    fs.writeFileSync(dest, response.body, { encoding: 'utf-8' });
+    return response.body;
   }
   catch(error) {
     // Promise rejected
@@ -85,7 +84,9 @@ async function vendorFile(
 
     console.log(`Using GitHub release ${config.release} for ${displayName}`);
     const url = `https://github.com/${ghUser}/${ghRepo}/releases/download/${config.release}/${vendorConfig.github.releaseFile}`;
-    await downloadAsync(url, destPath);
+    const content = await downloadAsync(url);
+    console.log(`Writing to ${destPath} ...`);
+    fs.writeFileSync(destPath, content, { encoding: 'utf-8' });
     console.log("Completed downloading the asset.");
     return;
   }
@@ -131,5 +132,5 @@ clean(vendorPath, true);
   );
 
   console.log("Vendoring complete.");
-  process.exit(0);
+  //process.exit(0);
 })();

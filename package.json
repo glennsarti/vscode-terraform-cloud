@@ -9,8 +9,7 @@
   "version": "0.0.1",
   "components": {
     "openapi": {
-      "release-disabled": "0.0.1",
-      "file": "../openapi-terraform-cloud/specifications/openapi-terraform-cloud.yaml"
+      "release": "0.0.2"
     }
   },
   "engines": {
