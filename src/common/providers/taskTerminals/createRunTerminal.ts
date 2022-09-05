@@ -11,6 +11,10 @@ export class TfcCreateRunDefinition {
   public workspaceId: string = "";
   public workspaceName: string = "";
   public message: string = "";
+
+  public emptyApply: boolean = false;
+  public autoApply: boolean = false;
+  public planOnly: boolean = false;
 }
 
 const DELAY_BACK_OFF = 1.5;
@@ -75,12 +79,13 @@ export class TfcCreateRunTerminal extends TerraformCloudTaskTerminal {
 
       this.writeEmitter.fire("Creating run...\r\n");
       // TODO: use the task definition
-      const req = new tfchelper.RunBuilder(workspace.id)
+      let builder = new tfchelper.RunBuilder(workspace.id)
         .withMessage(this.taskDefinition.message)
-        //.withEmptyApply()
-        //.withAutoApply()
-        .build();
-      run = (await client.runs.createRun(req)).data;
+        .withAutoApply(this.taskDefinition.autoApply)
+        .withEmptyApply(this.taskDefinition.emptyApply)
+        .withPlanOnly(this.taskDefinition.planOnly);
+
+      run = (await client.runs.createRun(builder.build())).data;
 
       if (cancelToken.isCancellationRequested) {
         return;
@@ -118,8 +123,9 @@ export class TfcCreateRunTerminal extends TerraformCloudTaskTerminal {
 class SeenRunTimeStamps {
   appliedAt?: string;
   plannedAt?: string;
-  postPlanCompletedAt?: string;
   prePlanCompletedAt?: string;
+  postPlanCompletedAt?: string;
+  preApplyCompletedAt?: string;
 }
 
 class RunStatusPoller {
@@ -256,6 +262,20 @@ class RunStatusPoller {
       this.seen.postPlanCompletedAt =
         run.attributes["status-timestamps"]?.["post-plan-completed-at"];
       await this.writeRunTaskStage(client, run, "post_plan");
+    }
+
+    if (this.cancelToken.isCancellationRequested) {
+      return;
+    }
+
+    // Pre-Apply
+    if (
+      this.seen.preApplyCompletedAt !==
+      run.attributes["status-timestamps"]?.["pre-apply-completed-at"]
+    ) {
+      this.seen.preApplyCompletedAt =
+        run.attributes["status-timestamps"]?.["pre-apply-completed-at"];
+      await this.writeRunTaskStage(client, run, "pre_apply");
     }
 
     if (this.cancelToken.isCancellationRequested) {

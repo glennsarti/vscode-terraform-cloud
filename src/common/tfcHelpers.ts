@@ -533,6 +533,7 @@ export class RunBuilder {
   public workspaceId: string;
   public allowEmptyApply?: boolean;
   public autoApply?: boolean;
+  public planOnly?: boolean;
   //public configurationVersionId?: string;
 
   constructor(workspaceId: string) {
@@ -544,13 +545,18 @@ export class RunBuilder {
     return this;
   }
 
-  public withEmptyApply(): RunBuilder {
-    this.allowEmptyApply = true;
+  public withAutoApply(value: boolean): RunBuilder {
+    this.autoApply = value;
     return this;
   }
 
-  public withAutoApply(): RunBuilder {
-    this.autoApply = true;
+  public withEmptyApply(value: boolean): RunBuilder {
+    this.allowEmptyApply = value;
+    return this;
+  }
+
+  public withPlanOnly(value: boolean): RunBuilder {
+    this.planOnly = value;
     return this;
   }
 
@@ -560,8 +566,8 @@ export class RunBuilder {
         attributes: {
           //isDestroy: this.isDestroy,
           message: this.message,
-          // allow-: this.allowEmptyApply,
-          // autoApply: this.autoApply,
+          "auto-apply": this.autoApply,
+          "allow-empty-apply": this.allowEmptyApply,
         },
         relationships: {
           workspace: {

@@ -43,6 +43,7 @@ refresh?: boolean;
 'planned-at'?: string;
 'post-plan-completed-at'?: string;
 'pre-plan-completed-at'?: string;
+'pre-apply-completed-at'?: string;
 };
 source?: string;
 status: RunStatus;

@@ -58,7 +58,7 @@ async function runAsMarkdown(config: IConfiguration, response: responses.RunResp
   | Will Destroy | ${boolAsYesNo(run.attributes['is-destroy'])} |
   | Terraform Version | ${run.attributes['terraform-version']} |
   | Status | ${tfchelper.prettyStatus(run.attributes.status)} |
-  | Workspace | xxx |
+  | Workspace | ${run.relationships?.workspace?.data?.id} |
   `;
 
   if (taskStages !== undefined) {
@@ -79,10 +79,11 @@ async function runAsMarkdown(config: IConfiguration, response: responses.RunResp
 
   // ## Policy Checks
 
-  // ## Post-Plan
-
   content += "\n---\n";
-  // ## Pre-Apply
+
+  if (taskStages !== undefined) {
+    content += await taskStagesResponseAsMarkdown(taskStages, "pre_apply");;
+  }
 
   if (apply !== undefined && apply.attributes.status !== 'unreachable') {
     content += applyAsMarkdown(apply);
@@ -113,7 +114,7 @@ function numberAsCurrency(value?: number | string, showPlusMinus: boolean = fals
 async function taskStagesResponseAsMarkdown(response: responses.TaskStagesResponse, stageName: string): Promise<string> {
   if (response.data === undefined) { return ""; }
   const stage = response.data.find((item) => {
-    return item.attributes.stage === "post_plan";
+    return item.attributes.stage === stageName;
   });
   if (stage === undefined) { return ""; }
 

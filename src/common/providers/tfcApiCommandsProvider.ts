@@ -92,6 +92,30 @@ async function getCreateRunDefinition(workspace: tfc.Workspace, useDefault: bool
   if (useDefault) {
     return defn;
   }
+
+  let items = [];
+  items.push({ label: 'Allow empty apply', description: `Apply plans with no changes.`, commandName: "empty_apply" });
+  items.push({ label: 'Enable auto apply', description: `Automatically apply changes.`, commandName: "auto_apply" });
+  items.push({ label: 'Plan only', description: `Do not apply changes`, commandName: "plan_only" });
+
+  const result = await vscode.window.showQuickPick(items, { canPickMany: true, placeHolder: "Create a new run" });
+  if (result === undefined) { return; }
+
+  result.forEach((item) => {
+    switch (item.commandName) {
+      case "auto_apply":
+        defn.autoApply = true;
+        break;
+      case "empty_apply":
+        defn.emptyApply = true;
+        break;
+      case "plan_only":
+        defn.planOnly = true;
+        break;
+    }
+  });
+
+  return defn;
 }
 
 async function createRunCommand(taskProvider: ITerraformCloudTaskProvider, workspace: tfc.Workspace, useDefault: boolean): Promise<void> {

@@ -235,23 +235,27 @@ export class TfcWorkspaceProvider
         `Auto apply: ${prettyString(ws.attributes["auto-apply"])}`,
         ""
       ),
-      createTextItem(
-        `Average plan time: ${prettyDuration(
-          ws.attributes["apply-duration-average"]
-        )}`,
-        ""
-      ),
-      createTextItem(
-        `Average apply time: ${prettyDuration(
-          ws.attributes["apply-duration-average"]
-        )}`,
-        ""
-      ),
-      createTextItem(
-        `Failed runs: ${ws.attributes["run-failures"]} of ${ws.attributes["workspace-kpis-runs-count"]}`,
-        ""
-      )
     );
+    if (ws.attributes["workspace-kpis-runs-count"] !== null) {
+      list.push(
+        createTextItem(
+          `Average plan time: ${prettyDuration(
+            ws.attributes["apply-duration-average"]
+          )}`,
+          ""
+        ),
+        createTextItem(
+          `Average apply time: ${prettyDuration(
+            ws.attributes["apply-duration-average"]
+          )}`,
+          ""
+        ),
+        createTextItem(
+          `Failed runs: ${ws.attributes["run-failures"]} of ${ws.attributes["workspace-kpis-runs-count"]}`,
+          ""
+        ),
+      );
+    };
 
     return list;
   }

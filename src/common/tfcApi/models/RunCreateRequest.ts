@@ -8,6 +8,7 @@ attributes?: {
 'allow-empty-apply'?: boolean;
 'auto-apply'?: boolean;
 message?: string;
+'plan-only'?: boolean;
 };
 relationships: {
 workspace: {

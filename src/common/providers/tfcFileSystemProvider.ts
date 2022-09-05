@@ -82,33 +82,40 @@ export class TfcFileSystemProvider implements vscode.FileSystemProvider {
   }
 
   async readFile(uri: vscode.Uri): Promise<Uint8Array> {
-    console.log(`BEGIN READFILE ${uri}`);
-    const xx= await this.getFileStatItem(uri).then((item) => {
+    return await this.getFileStatItem(uri).then((item) => {
       if (item === undefined) {
         throw vscode.FileSystemError.FileNotFound(uri);
       } else {
         return item.data;
       }
     });
-    console.log(`END READFILE ${uri}`);
-    return xx;
   }
 
   writeFile(
-    _uri: vscode.Uri,
+    uri: vscode.Uri,
     _content: Uint8Array,
     _options: { create: boolean; overwrite: boolean }
-  ): void {}
+  ): void {
+    throw vscode.FileSystemError.NoPermissions(uri);
+  }
 
   rename(
-    _oldUri: vscode.Uri,
+    oldUri: vscode.Uri,
     _newUri: vscode.Uri,
     _options: { overwrite: boolean }
-  ): void {}
+  ): void {
+    throw vscode.FileSystemError.NoPermissions(oldUri);
+  }
 
-  delete(_uri: vscode.Uri): void {}
+  delete(uri: vscode.Uri): void {
+    throw vscode.FileSystemError.NoPermissions(uri);
+  }
 
-  watch(_resource: vscode.Uri): vscode.Disposable {
+  watch(
+    uri: vscode.Uri,
+    _options: { readonly recursive: boolean; readonly excludes: readonly string[] }
+  ): vscode.Disposable {
+    console.log(`WATCH ${uri}`); // TODO!!!
     return new vscode.Disposable(() => {});
   }
 
