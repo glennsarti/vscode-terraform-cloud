@@ -59,11 +59,9 @@ export class TfcRunProvider implements ITfcRunProvider,vscode.TreeDataProvider<P
 
     try {
       // TODO: How to paginate?
-      const runs = await tfchelper.getRuns(client, this.workspaceId);  // run.attributes.message === "ashffghgf"
+      const runs = await tfchelper.getRuns(client, this.workspaceId);
       if (runs === undefined) { return []; }
       if (runs.length === 0) { return [createTextItem("The workspace has no runs", "")]; }
-      // TODO: Debug
-      //return runs.filter(run => { return run.attributes.message === "ashffghgf"; }).map(run => {
       return runs.map(run => {
         return this.createRunItem(run);
       });

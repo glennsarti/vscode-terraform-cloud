@@ -462,10 +462,12 @@ export function valueToPrettyDate(value?: Date | string): string {
 export function runStatusIcon(run: tfc.Run): string {
   const status = run.attributes.status;
   if (runStatusIsCompleted(run)) {
-    if (runStatusIsSuccess(run)) {
-      return "pass";
-    } else if(run.attributes.status === "errored") {
+    if (run.attributes.status === "errored") {
       return "error";
+    } else if (run.attributes.status === "discarded") {
+      return "trash";
+    } else if (runStatusIsSuccess(run)) {
+      return "pass";
     } else {
       return "stop";
     }

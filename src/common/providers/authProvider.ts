@@ -155,7 +155,6 @@ export class TerrafromCloudAPIAuthenticationProvider implements vscode.Authentic
   }
 }
 
-
 class TFCTokenSecretStorge {
   onDidChange: vscode.Event<vscode.SecretStorageChangeEvent>;
   private storage: vscode.SecretStorage;
