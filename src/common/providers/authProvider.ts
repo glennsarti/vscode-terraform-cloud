@@ -31,11 +31,6 @@ export async function currentSession(forceLogin: boolean, config: IConfiguration
 
 export class TerrafromCloudAPIAuthenticationProvider implements vscode.AuthenticationProvider, vscode.Disposable {
   static id = TERRAFROM_CLOUD_API_AUTHENICATION_PROVIDER_ID;
-  //private static secretKey = 'APIToken';
-
-  // this property is used to determine if the token has been changed in another window of VS Code.
-  // It is used in the checkForUpdates function.
-  //private currentToken: Promise<string | undefined> | undefined;
   private initializedDisposable: vscode.Disposable | undefined;
 
   private _onDidChangeSessions = new vscode.EventEmitter<vscode.AuthenticationProviderAuthenticationSessionsChangeEvent>();
@@ -127,19 +122,35 @@ export class TerrafromCloudAPIAuthenticationProvider implements vscode.Authentic
   async createSession(scopes: string[]): Promise<vscode.AuthenticationSession> {
     this.ensureInitialized();
 
-    // Prompt for the PAT.
-    const token = await vscode.window.showInputBox({
-      ignoreFocusOut: true,
-      placeHolder: 'API Key',
-      prompt: 'Enter a Terraform Cloud API Key',
-      password: true,
-      title: `Terraform Cloud - ${scopes[0]}`
-    });
+    let token: string | undefined;
 
-    // Note: this example doesn't do any validation of the token beyond making sure it's not empty.
-    if (!token) {
-      throw new Error('API Key is required');
-    }
+    do {
+      // Prompt for the PAT.
+      token = await vscode.window.showInputBox({
+        ignoreFocusOut: true,
+        placeHolder: 'API Key',
+        prompt: 'Enter a Terraform Cloud API Key',
+        password: true,
+        title: `Terraform Cloud - ${scopes[0]}`
+      });
+
+      // Note: this example doesn't do any validation of the token beyond making sure it's not empty.
+      if (!token) {
+        throw new Error('API Key is required');
+      }
+
+      try {
+        const client = createTfcClient(token, scopes[0]);
+        const account = await client.users.accountDetails();
+        vscode.window.showInformationMessage(`Logged into Terraform Cloud as ${account.data?.attributes.username} (${account.data?.attributes.email})`);
+      } catch (e: any) {
+        if (e.message === 'Unauthorized') {
+          vscode.window.showErrorMessage('Failed to get profile. You need to use a PAT that has access to all organizations. Please sign out and try again.');
+        }
+        token = undefined;
+      }
+    } while (token === undefined);
+
     // TODO: Validate with a call
 
     // Don't set `currentToken` here, since we want to fire the proper events in the `checkForUpdates` call
