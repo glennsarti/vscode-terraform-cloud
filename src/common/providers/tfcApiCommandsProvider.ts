@@ -12,6 +12,7 @@ export const CREATE_RUN_COMMAND = "terraform-cloud.create-run.command";
 export const DISCARD_RUN_COMMAND = "terraform-cloud.discard-run.command";
 export const FORCE_UNLOCK_WORKSPACE_COMMAND = "terraform-cloud.force-unlock-workspace.command";
 export const LOCK_WORKSPACE_COMMAND = "terraform-cloud.lock-workspace.command";
+export const OVERRIDE_RUN_COMMAND = "terraform-cloud.override-run.command";
 export const UNLOCK_WORKSPACE_COMMAND = "terraform-cloud.unlock-workspace.command";
 export const WORKSPACE_AND_RUN_PICKER_COMMAND = "terraform-cloud.workspace-current-run.picker";
 
@@ -50,6 +51,10 @@ async function notificationBarCommand(
     if (tfchelper.runIsCancelable(currentRun)) {
       items.push({ label: '$(error) Cancel current run', description: `Cancel the run '${currentRun.id}'.`, commandName: CANCEL_RUN_COMMAND });
     }
+
+    if (tfchelper.runIsAwitingPolicyOverride(currentRun)) {
+      items.push({ label: '$(pass) Override current run', description: `Override and continue the run '${currentRun.id}'.`, commandName: OVERRIDE_RUN_COMMAND });
+    }
   }
   if (items.length === 0) {
     // TODO: mesage that you can't do anything
@@ -71,7 +76,11 @@ async function notificationBarCommand(
     case UNLOCK_WORKSPACE_COMMAND:
     case LOCK_WORKSPACE_COMMAND:
       vscode.commands.executeCommand(result.commandName, workspace);
-    }
+      break;
+    case OVERRIDE_RUN_COMMAND:
+      vscode.commands.executeCommand(result.commandName, currentRun);
+      break;
+  }
 }
 
 async function getCreateRunDefinition(workspace: tfc.Workspace, useDefault: boolean): Promise<TfcCreateRunDefinition | undefined> {
@@ -138,7 +147,7 @@ async function approveRunCommand(config: IConfiguration, run: tfc.Run): Promise<
   }
 
   const client = await tfchelper.createClient(config);
-  await client.runs.applyRun(run.id, comment.trim() !== "" ? { comment: comment.trim() } : undefined);
+  await client.runs.applyRun(run.id, { comment: comment.trim() });
 
   vscode.window.showInformationMessage(`Run '${run.id}' has been approved.`);
 }
@@ -156,9 +165,87 @@ async function cancelRunCommand(config: IConfiguration, run: tfc.Run): Promise<v
   }
 
   const client = await tfchelper.createClient(config);
-  await client.runs.cancelRun(run.id, comment.trim() !== "" ? { comment: comment.trim() } : undefined);
+  await client.runs.cancelRun(run.id, { comment: comment.trim() });
 
   vscode.window.showInformationMessage(`Run '${run.id}' has been canceled.`);
+}
+
+async function discardRunCommand(config: IConfiguration, run: tfc.Run): Promise<void> {
+  // TODO: Check if the run is approvable... tfchelper.runIsConfirmable(currentRun)
+
+  const comment = await vscode.window.showInputBox({
+    title: "Discard a run - Enter a comment for the discard",
+    placeHolder: "Optional comment",
+  });
+
+  if (comment === undefined) {
+    return;
+  }
+
+  const client = await tfchelper.createClient(config);
+  await client.runs.discardRun(run.id, { comment: comment.trim() });
+
+  vscode.window.showInformationMessage(`Run '${run.id}' has been discarded.`);
+}
+
+
+async function overrideRunCommand(config: IConfiguration, run: tfc.Run): Promise<void> {
+  // TODO: Check if the run is override-able...
+
+  const comment = await vscode.window.showInputBox({
+    title: "Override policy failure for a run - Enter a comment for the override",
+    placeHolder: "Optional comment",
+  });
+
+  if (comment === undefined) {
+    return;
+  }
+
+  try {
+    const client = await tfchelper.createClient(config);
+    const polchks = await client.runs.listRunPolicyChecks(run.id);
+
+    for (let index = 0; index < polchks.data.length; index++) {
+      const check = polchks.data[index];
+      if (check.attributes.actions?.["is-overridable"] === true) {
+        if (check.attributes.permissions?.["can-override"]) {
+
+          try {
+            await client.policyChecks.overridePolicyCheck(check.id, { comment: comment.trim() });
+            vscode.window.showInformationMessage(`Policy check '${check.id}' has been overriden.`);
+          } catch (e: any) {
+            if (e instanceof tfc.ApiError) {
+              if (e.status === 409) {
+                vscode.window.showErrorMessage(
+                  `Policy check ${check.id} cannot be overriden right now.`
+                );
+                return;
+              }
+              vscode.window.showErrorMessage(`Failed to override policy check '${check.id}': ${e}`);
+              return;
+            }
+            throw e;
+          }
+        } else {
+          vscode.window.showErrorMessage(
+            `Failed to override ${check.id} as you do not have the permission to perform the override action.`
+          );
+        }
+      }
+    }
+  } catch (e: any) {
+    if (e instanceof tfc.ApiError) {
+      if (e.status === 401) {
+        vscode.window.showErrorMessage(
+          "Failed to get the selected Run. Please sign out and try again."
+        );
+        return;
+      }
+      vscode.window.showErrorMessage(`Failed to override policy for Run '${run.id}': ${e}`);
+      return;
+    }
+    throw e;
+  }
 }
 
 async function unlockWorkspaceCommand(config: IConfiguration, session: ITfcSession, workspace: tfc.Workspace): Promise<void> {
@@ -245,11 +332,17 @@ export function registerTerrafromCloudApiCommands(
     vscode.commands.registerCommand(CANCEL_RUN_COMMAND, async (run: tfc.Run) => {
       cancelRunCommand(config, run);
     }),
+    vscode.commands.registerCommand(DISCARD_RUN_COMMAND, async (run: tfc.Run) => {
+      discardRunCommand(config, run);
+    }),
     vscode.commands.registerCommand(UNLOCK_WORKSPACE_COMMAND, async (ws: tfc.Workspace) => {
       unlockWorkspaceCommand(config, session, ws);
     }),
     vscode.commands.registerCommand(LOCK_WORKSPACE_COMMAND, async (ws: tfc.Workspace) => {
       lockWorkspaceCommand(config, session, ws);
+    }),
+    vscode.commands.registerCommand(OVERRIDE_RUN_COMMAND, async (run: tfc.Run) => {
+      overrideRunCommand(config, run);
     }),
   ];
 }

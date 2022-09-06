@@ -38,11 +38,13 @@ export class NotificationBarProvider implements INotificationBarProvider, vscode
     }
   }
 
-  public refresh(): void {
+  public refresh(showInUI: boolean = true): void {
     if (!this.isWatching) { return; }
 
-    this.statusBarItem.text = ("$(loading~spin) " + this.workspaceName).trim();
-    this.statusBarItem.tooltip = "Refreshing Terraform Cloud Workspace...";
+    if (showInUI) {
+      this.statusBarItem.text = ("$(loading~spin) " + this.workspaceName).trim();
+      this.statusBarItem.tooltip = "Refreshing Terraform Cloud Workspace...";
+    }
 
     if (this.timer !== undefined) { clearTimeout(this.timer); }
     this.timer = setTimeout(() => { this.doTimerEvent(); }, 0);
@@ -143,15 +145,6 @@ export class NotificationBarProvider implements INotificationBarProvider, vscode
       this.statusBarItem.backgroundColor = new vscode.ThemeColor("statusBarItem.background");
     }
 
-    // if (this.statusBarItem.command === undefined) {
-    //   let cmd = {
-    //     arguments: [this.workspace.id, this.workspace.attributes.name, "Created from VSCode Terraform Cloud Extension"],
-    //     command: "terraform-cloud.create-a-run",
-    //     title: "Create a new run",
-    //   };
-    //   this.statusBarItem.command = cmd;
-    // }
-
     let cmd = {
       arguments: [this.workspace, currentlyRunning ? this.runs.get('currentRun') : undefined],
       command: WORKSPACE_AND_RUN_PICKER_COMMAND,
@@ -191,12 +184,12 @@ export class NotificationBarProvider implements INotificationBarProvider, vscode
           workspace.attributes.name
         );
       }
-      this.refresh();
+      this.refresh(true);
     });
 
     session.onChangeInWorkspace((workspace) => {
       if (workspace !== undefined && workspace.id === this.workspaceId) {
-        this.refresh();
+        this.refresh(false);
       }
     });
   }

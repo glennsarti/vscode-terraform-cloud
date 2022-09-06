@@ -3,6 +3,7 @@ import * as tfchelper from "../../tfcHelpers";
 import * as tfc from "../../tfcApi";
 import * as ansi from "./ansi";
 import { IConfiguration } from "../../configuration";
+import { ITfcSession } from "../../tfcSession";
 import { TerraformCloudTaskTerminal, TerminalWriter } from "./abstract";
 import { TASK_TYPE } from "../taskProvider";
 
@@ -30,10 +31,12 @@ async function consoleUrlForRun(
 
 export class TfcCreateRunTerminal extends TerraformCloudTaskTerminal {
   private taskDefinition: TfcCreateRunDefinition;
+  private session: ITfcSession;
 
-  constructor(config: IConfiguration, defn: TfcCreateRunDefinition) {
+  constructor(config: IConfiguration, session: ITfcSession, defn: TfcCreateRunDefinition) {
     super(config);
     this.taskDefinition = defn;
+    this.session = session;
   }
 
   async doTask(
@@ -90,6 +93,7 @@ export class TfcCreateRunTerminal extends TerraformCloudTaskTerminal {
       if (cancelToken.isCancellationRequested) {
         return;
       }
+      this.session.changeInWorkspace(workspace);
 
       const runURL = await consoleUrlForRun(this.config, run);
       if (runURL === undefined) {
@@ -125,6 +129,7 @@ class SeenRunTimeStamps {
   plannedAt?: string;
   prePlanCompletedAt?: string;
   postPlanCompletedAt?: string;
+  policyCheckedAt?: string;
   preApplyCompletedAt?: string;
 }
 
@@ -217,6 +222,11 @@ class RunStatusPoller {
       this.writer.fire(
         `The Run is waiting for confirmation. Browse to ${runURL} for more detailed information.\r\n\r\n`
       );
+    } else if (tfchelper.runIsAwitingPolicyOverride(run)) {
+      const runURL = await consoleUrlForRun(this.config, run);
+      this.writer.fire(
+        `The Run is waiting for a policy override. Browse to ${runURL} for more detailed information.\r\n\r\n`
+      );
     }
   }
 
@@ -268,6 +278,19 @@ class RunStatusPoller {
       return;
     }
 
+    // TODO: Cost Estimate
+
+    // Policy Checks : Policy Overrides make it tricky. We can't depend just on the status timestamp
+    let policyCheckedAt = run.attributes["status-timestamps"]?.["policy-checked-at"];
+    if (policyCheckedAt === undefined && (run.attributes.status === "policy_soft_failed" || run.attributes.status === "policy_override")) {
+      policyCheckedAt = Date.now().toString();
+    }
+
+    if (this.seen.policyCheckedAt === undefined && policyCheckedAt !== undefined) {
+      this.seen.policyCheckedAt = policyCheckedAt;
+      await this.writeRunPolicyChecks(client, run);
+    }
+
     // Pre-Apply
     if (
       this.seen.preApplyCompletedAt !==
@@ -290,6 +313,49 @@ class RunStatusPoller {
       this.seen.appliedAt = run.attributes["status-timestamps"]?.["applied-at"];
       await this.writeRunApply(client, run);
     }
+  }
+
+  private async writeRunPolicyChecks(
+    client: tfc.TfcClient,
+    run: tfc.Run
+  ): Promise<void> {
+    if (run.relationships?.["policy-checks"]?.data === undefined) {
+      return;
+    }
+
+    const polchks = await client.policyChecks.listRunPolicyChecks(run.id);
+    if (polchks === undefined) {
+      return;
+    }
+
+    if (this.cancelToken.isCancellationRequested) {
+      return;
+    }
+
+    let output = "Policies: ";
+    // passed    advisory failed  soft faild
+    let passed = 0;
+    let advisory = 0;
+    let softFailed = 0;
+    let hardFailed = 0;
+    polchks.data.forEach((polchk) => {
+      passed = passed + (polchk.attributes.result.passed || 0);
+      advisory = advisory + (polchk.attributes.result["advisory-failed"] || 0);
+      softFailed = softFailed + (polchk.attributes.result["soft-failed"] || 0);
+      hardFailed = hardFailed + (polchk.attributes.result["hard-failed"] || 0);
+    });
+
+    output += `${ansi.YELLOW_FORE}${passed}${ansi.RESET} passed`;
+    if (hardFailed > 0) {
+      output += `, ${ansi.YELLOW_FORE}${hardFailed}${ansi.RESET} failed`;
+    }
+    if (softFailed > 0) {
+      output += `, ${ansi.YELLOW_FORE}${softFailed}${ansi.RESET} soft failed`;
+    }
+    if (advisory > 0) {
+      output += `, ${ansi.YELLOW_FORE}${advisory}${ansi.RESET} advisory failed`;
+    }
+    this.writer.fire(output + "\r\n");
   }
 
   private async writeRunPlan(

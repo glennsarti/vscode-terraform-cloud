@@ -9,6 +9,7 @@ import { AppliesService } from './services/AppliesService';
 import { CostEstimatesService } from './services/CostEstimatesService';
 import { OrganizationsService } from './services/OrganizationsService';
 import { PlansService } from './services/PlansService';
+import { PolicyChecksService } from './services/PolicyChecksService';
 import { RunsService } from './services/RunsService';
 import { TaskResultsService } from './services/TaskResultsService';
 import { TaskStagesService } from './services/TaskStagesService';
@@ -23,6 +24,7 @@ export class TfcClient {
   public readonly costEstimates: CostEstimatesService;
   public readonly organizations: OrganizationsService;
   public readonly plans: PlansService;
+  public readonly policyChecks: PolicyChecksService;
   public readonly runs: RunsService;
   public readonly taskResults: TaskResultsService;
   public readonly taskStages: TaskStagesService;
@@ -48,6 +50,7 @@ export class TfcClient {
     this.costEstimates = new CostEstimatesService(this.request);
     this.organizations = new OrganizationsService(this.request);
     this.plans = new PlansService(this.request);
+    this.policyChecks = new PolicyChecksService(this.request);
     this.runs = new RunsService(this.request);
     this.taskResults = new TaskResultsService(this.request);
     this.taskStages = new TaskStagesService(this.request);

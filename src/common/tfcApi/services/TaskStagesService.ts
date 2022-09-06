@@ -12,7 +12,7 @@ export class TaskStagesService {
   constructor(public readonly httpRequest: BaseHttpRequest) {}
 
   /**
-   * Show a task stages in a run
+   * Show task stages in a run
    * @param runId The id of the run
    * @param include Additional resources to include in the response
    * @returns any List Task Stages Response

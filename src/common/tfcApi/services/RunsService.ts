@@ -3,6 +3,7 @@
 /* eslint-disable */
 import type { IncludedResources } from '../models/IncludedResources';
 import type { MetaPagination } from '../models/MetaPagination';
+import type { PolicyCheck } from '../models/PolicyCheck';
 import type { Run } from '../models/Run';
 import type { RunCreateRequest } from '../models/RunCreateRequest';
 import type { TaskStage } from '../models/TaskStage';
@@ -152,7 +153,7 @@ included?: IncludedResources;
   }
 
   /**
-   * Show a task stages in a run
+   * Show task stages in a run
    * @param runId The id of the run
    * @param include Additional resources to include in the response
    * @returns any List Task Stages Response
@@ -175,6 +176,40 @@ pagination?: MetaPagination;
       },
       query: {
         'include': include,
+      },
+      errors: {
+        404: `HTTP 404 Not Found Response`,
+      },
+    });
+  }
+
+  /**
+   * Show policy checks in a run
+   * @param runId The id of the run
+   * @param pageNumber The page to request. Defaults to the first page
+   * @param pageSize The page size to request. Defaults to the 20.
+   * @returns any List Policy Checks Response
+   * @throws ApiError
+   */
+  public listRunPolicyChecks(
+runId: string,
+pageNumber?: number,
+pageSize: number = 20,
+): CancelablePromise<{
+data: Array<PolicyCheck>;
+meta?: {
+pagination?: MetaPagination;
+};
+}> {
+    return this.httpRequest.request({
+      method: 'GET',
+      url: '/runs/{run_id}/policy-checks',
+      path: {
+        'run_id': runId,
+      },
+      query: {
+        'page[number]': pageNumber,
+        'page[size]': pageSize,
       },
       errors: {
         404: `HTTP 404 Not Found Response`,

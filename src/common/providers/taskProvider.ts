@@ -59,7 +59,7 @@ export class TerraformCloudTaskProvider
     const exec = new vscode.CustomExecution(
       async (): Promise<vscode.Pseudoterminal> => {
         // When the task is executed, this callback will run. Here, we setup for running the task.
-        return new TfcCreateRunTerminal(this.config, defn);
+        return new TfcCreateRunTerminal(this.config, this.session, defn);
       }
     );
 
@@ -76,7 +76,7 @@ export class TerraformCloudTaskProvider
     const exec = new vscode.CustomExecution(
       async (): Promise<vscode.Pseudoterminal> => {
         // When the task is executed, this callback will run. Here, we setup for running the task.
-        return new TfcCreateRunTerminal(this.config, defn);
+        return new TfcCreateRunTerminal(this.config, this.session, defn);
       }
     );
 

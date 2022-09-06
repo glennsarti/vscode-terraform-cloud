@@ -375,6 +375,10 @@ export function runIsAwitingConfirmation(run: tfc.Run): boolean {
   return run.attributes.actions["is-confirmable"];
 }
 
+export function runIsAwitingPolicyOverride(run: tfc.Run): boolean {
+  return run.attributes.status === "policy_override";
+}
+
 // export function prettyRunStatus(status: string): string {
 //   // TODO: Get rid of this method
 //   return prettyStatus(status);
@@ -472,7 +476,7 @@ export function runStatusIcon(run: tfc.Run): string {
       return "stop";
     }
   } else {
-    if (runIsAwitingConfirmation(run)) {
+    if (runIsAwitingConfirmation(run) || runIsAwitingPolicyOverride(run)) {
       return "report";
     } else if (run.attributes.status === "pending") {
       return "watch";
