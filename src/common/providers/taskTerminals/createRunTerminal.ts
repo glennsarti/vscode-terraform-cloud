@@ -81,7 +81,6 @@ export class TfcCreateRunTerminal extends TerraformCloudTaskTerminal {
       }
 
       this.writeEmitter.fire("Creating run...\r\n");
-      // TODO: use the task definition
       let builder = new tfchelper.RunBuilder(workspace.id)
         .withMessage(this.taskDefinition.message)
         .withAutoApply(this.taskDefinition.autoApply)
@@ -129,6 +128,7 @@ class SeenRunTimeStamps {
   plannedAt?: string;
   prePlanCompletedAt?: string;
   postPlanCompletedAt?: string;
+  costEstimatedAt?: string;
   policyCheckedAt?: string;
   preApplyCompletedAt?: string;
 }
@@ -278,7 +278,18 @@ class RunStatusPoller {
       return;
     }
 
-    // TODO: Cost Estimate
+    // Cost Estimate
+    if (
+      this.seen.costEstimatedAt !==
+      run.attributes["status-timestamps"]?.["cost-estimated-at"]
+    ) {
+      this.seen.costEstimatedAt = run.attributes["status-timestamps"]?.["cost-estimated-at"];
+      await this.writeRunCostEstimate(client, run);
+    }
+
+    if (this.cancelToken.isCancellationRequested) {
+      return;
+    }
 
     // Policy Checks : Policy Overrides make it tricky. We can't depend just on the status timestamp
     let policyCheckedAt = run.attributes["status-timestamps"]?.["policy-checked-at"];
@@ -315,6 +326,36 @@ class RunStatusPoller {
     }
   }
 
+  private async writeRunCostEstimate(
+    client: tfc.TfcClient,
+    run: tfc.Run
+  ): Promise<void> {
+    const costId = run.relationships?.["cost-estimate"]?.data?.id;
+    if (costId === undefined) { return; }
+    const cost = (await client.costEstimates.showCostEstimate(costId));
+
+    if (this.cancelToken.isCancellationRequested) {
+      return;
+    }
+
+    let output = "Cost estimation: ";
+    output += `${ansi.BOLD}${cost.data.attributes["matched-resources-count"]}${ansi.RESET}`;
+    output += ` of ${ansi.BOLD}${cost.data.attributes["resources-count"]}${ansi.RESET} estimated. `;
+    output += `Change of `;
+
+    let delta = this.numberAsCurrency(cost.data.attributes["delta-monthly-cost"], true);
+    if (delta === "" || delta === "+$0.00") {
+      output += "$0.00";
+    } else if (delta.startsWith("-")) {
+      output += `${ansi.GREEN_FORE}${delta}${ansi.RESET}`;
+    } else {
+      output += `${ansi.RED_FORE}${delta}${ansi.RESET}`;
+    }
+    output += "\r\n";
+
+    this.writer.fire(output + "\r\n");
+  }
+
   private async writeRunPolicyChecks(
     client: tfc.TfcClient,
     run: tfc.Run
@@ -333,7 +374,6 @@ class RunStatusPoller {
     }
 
     let output = "Policies: ";
-    // passed    advisory failed  soft faild
     let passed = 0;
     let advisory = 0;
     let softFailed = 0;
@@ -487,4 +527,19 @@ class RunStatusPoller {
     value = value.replace("\n", " ");
     return value;
   }
+
+  private numberAsCurrency(value?: number | string, showPlusMinus: boolean = false): string {
+    if (value === undefined) { return ""; }
+    let prefix = "";
+    if (showPlusMinus) {
+      if (Number(value) < 0) {
+        prefix += "-";
+      } else {
+        prefix += "+";
+      }
+    }
+
+    return prefix + "$" + Number(value).toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 });
+  }
+
 }

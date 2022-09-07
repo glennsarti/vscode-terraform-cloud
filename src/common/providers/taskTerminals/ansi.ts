@@ -1,3 +1,4 @@
+export const BOLD = "\u001b[1m";
 export const BLUE_FORE = "\u001b[34m";
 export const GREEN_FORE = "\u001b[32m";
 export const RED_FORE = "\u001b[31m";
