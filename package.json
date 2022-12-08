@@ -9,7 +9,8 @@
   "version": "0.0.1",
   "components": {
     "openapi": {
-      "release": "0.0.2"
+      "xxrelease": "0.0.2",
+      "file": "C:\\Source\\oss\\openapi-terraform-cloud\\specifications\\openapi-terraform-cloud.yaml"
     }
   },
   "engines": {
@@ -105,7 +106,35 @@
         "icon": "$(refresh)",
         "enablement": "view == tfcWorkspaceRuns",
         "title": "Refresh"
+      },
+      {
+        "command": "terraform-cloud.runsTreeData.refreshAll",
+        "icon": "$(refresh)",
+        "enablement": "view == tfcWorkspaceRuns",
+        "title": "Refresh"
+      },
+
+
+      {
+        "command": "terraform-cloud.runsTreeData.getPlanLog",
+        "icon": "$(refresh)",
+        "enablement": "view == tfcWorkspaceRuns",
+        "title": "View Plan log"
+      },
+      {
+        "command": "terraform-cloud.runsTreeData.getApplyLog",
+        "icon": "$(refresh)",
+        "enablement": "view == tfcWorkspaceRuns",
+        "title": "View Apply log"
+      },
+      {
+        "command": "terraform-cloud.runsTreeData.getPlanJson",
+        "icon": "$(refresh)",
+        "enablement": "view == tfcWorkspaceRuns",
+        "title": "View Plan JSON"
       }
+
+
     ],
     "menus": {
       "view/title": [
@@ -125,7 +154,7 @@
           "group": "navigation"
         },
         {
-          "command": "terraform-cloud.runsTreeData.refreshEntry",
+          "command": "terraform-cloud.runsTreeData.refreshAll",
           "when": "view == tfcWorkspaceRuns",
           "group": "navigation"
         }
@@ -170,6 +199,19 @@
           "command": "terraform-cloud.runsTreeData.viewDetails",
           "when": "view == tfcWorkspaceRuns && viewItem == run",
           "group": "inline"
+        },
+
+        {
+          "command": "terraform-cloud.runsTreeData.getPlanLog",
+          "when": "view == tfcWorkspaceRuns && viewItem == run"
+        },
+        {
+          "command": "terraform-cloud.runsTreeData.getApplyLog",
+          "when": "view == tfcWorkspaceRuns && viewItem == run"
+        },
+        {
+          "command": "terraform-cloud.runsTreeData.getPlanJson",
+          "when": "view == tfcWorkspaceRuns && viewItem == run"
         }
       ]
     },
@@ -187,8 +229,8 @@
       "activitybar": [
         {
           "id": "terraform-cloud-toolbar",
-          "title": "Terraform Cloud",
-          "icon": "media/terraform-svgrepo-com.svg"
+          "title": "HashiCorp Terraform Cloud",
+          "icon": "media/tfc2.svg"
         }
       ]
     },

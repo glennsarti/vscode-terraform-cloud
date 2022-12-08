@@ -1,12 +1,13 @@
 // import * as tfc from "./tfc/types";
 // import { TerraformCloud } from "./tfc/api";
 import * as tfc from './tfcApi';
+import * as dl from './httpDownloader';
 import * as responses from './tfcApiExtensions/responses';
 // import { RepositoryList } from "./git/types";
 import { currentSession, TerrafromCloudAPIAuthenticationProvider } from "./providers/authProvider";
 import { IConfiguration } from "./configuration";
 import { LruCache } from "./simpleCache";
-import { createTfcClient } from './tfcApiExtensions/TfcClient';
+import { createTfcClient, createDownloadClient } from './tfcApiExtensions/Clients';
 
 // Private cache to speed up lookups
 let orgCache: LruCache<tfc.Organization> = new LruCache<tfc.Organization>(10);
@@ -92,6 +93,10 @@ export async function createClient(
 ): Promise<tfc.TfcClient> {
   const session = await currentSession(false, config);
   return createTfcClient(session.accessToken, config.apiUrl);
+}
+
+export async function createDownloader(): Promise<dl.HttpClient> {
+  return createDownloadClient();
 }
 
 export async function getOrganizations(
@@ -260,12 +265,62 @@ export async function getPlan(
   return client.plans.showPlan(planId).then((result) => result.data);
 }
 
+export async function getPlanLog(
+  client: tfc.TfcClient,
+  planId: string,
+  _useCache: boolean = false
+): Promise<string | undefined> {
+  const plan = await client.plans.showPlan(planId);
+  const logUrl = plan.data.attributes['log-read-url'];
+  if (logUrl === undefined) { return undefined; }
+
+  const downloader = await createDownloader();
+  let result = await downloader.download.get(logUrl);
+  if (result !== undefined) {
+    return result.data;
+  } else {
+    return undefined;
+  }
+}
+
+export async function getPlanJson(
+  client: tfc.TfcClient,
+  planId: string,
+  _useCache: boolean = false
+): Promise<string | undefined> {
+  const jsonContent = await client.plans.retrievePlanJson(planId);
+
+  if (jsonContent !== undefined) {
+    return JSON.stringify(jsonContent, undefined, 2);
+  } else {
+    return undefined;
+  }
+}
+
 export async function getApply(
   client: tfc.TfcClient,
   applyId: string,
   _useCache: boolean = false
 ): Promise<tfc.Apply | undefined> {
   return client.applies.showApply(applyId).then((result) => result.data);
+}
+
+export async function getApplyLog(
+  client: tfc.TfcClient,
+  applyId: string,
+  _useCache: boolean = false
+): Promise<string | undefined> {
+  const apply = await client.applies.showApply(applyId);
+  const logUrl = apply.data.attributes['log-read-url'];
+  if (logUrl === undefined) { return undefined; }
+
+  const downloader = await createDownloader();
+  let result = await downloader.download.get(logUrl);
+  if (result !== undefined) {
+    return result.data;
+  } else {
+    return undefined;
+  }
 }
 
 export async function getCostEstimate(
@@ -574,6 +629,7 @@ export class RunBuilder {
           message: this.message,
           "auto-apply": this.autoApply,
           "allow-empty-apply": this.allowEmptyApply,
+          "plan-only": this.planOnly
         },
         relationships: {
           workspace: {

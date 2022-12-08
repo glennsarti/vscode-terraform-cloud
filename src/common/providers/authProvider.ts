@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 //import { TerraformCloud } from '../tfc/api';
 import { IConfiguration } from '../configuration';
 import * as tfcapi from '../tfcApi';
-import { createTfcClient } from '../tfcApiExtensions/TfcClient';
+import { createTfcClient } from '../tfcApiExtensions/Clients';
 
 export const TERRAFROM_CLOUD_API_AUTHENICATION_PROVIDER_ID = 'TerraformCloudAPIToken';
 const TOKEN_PREFIX = 'TerraformCloudAPISecretToken';

@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as common from '../common/extension';
-import { setHttpRequestConstructor } from "../common/tfcApiExtensions/TfcClient";
+import { setHttpRequestConstructor } from "../common/tfcApiExtensions/Clients";
 import { AxiosHttpRequest } from './tfcApi/core/AxiosHttpRequest';
 
 export function activate(context: vscode.ExtensionContext) {

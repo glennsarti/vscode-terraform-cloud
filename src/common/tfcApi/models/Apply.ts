@@ -6,6 +6,10 @@ export type Apply = {
   id: string;
   type: string;
   attributes: {
+'execution-details'?: {
+mode?: string;
+};
+'log-read-url'?: string;
 'resource-additions'?: number;
 'resource-changes'?: number;
 'resource-destructions'?: number;

@@ -3,6 +3,8 @@ import { IConfiguration } from "../configuration";
 import { TextEncoder } from "util";
 import { LockingLruCache } from "../simpleCache";
 import * as markdown from "../markdownHelper";
+import * as tfchelper from "../tfcHelpers";
+import { basename } from "path";
 
 export const TFC_FILESYSTEM_SCHEME = "terraformcloud";
 
@@ -15,7 +17,17 @@ function nameOfUri(uri: vscode.Uri): string {
 
 function dirOfUri(uri: vscode.Uri): string {
   const parts = uri.path.split("/");
-  return parts[1];
+  parts.pop();
+  return parts.join("/");
+}
+
+function stripExtension(value: string): string {
+  const idx = value.lastIndexOf(".");
+  if (idx === -1) {
+    return value;
+  } else {
+    return value.substring(0, idx);
+  }
 }
 
 class FileStatItem implements vscode.FileStat {
@@ -149,13 +161,14 @@ export class TfcFileSystemProvider implements vscode.FileSystemProvider {
   ): Promise<Uint8Array | undefined> {
     const dirName = dirOfUri(uri);
     const fileName = nameOfUri(uri);
+    const baseFileName = stripExtension(fileName);
     const encoder = new TextEncoder();
 
     switch (dirName) {
-      case "runs":
+      case "/runs":
         const content = await markdown.runIdAsMarkdown(
           this.config,
-          fileName,
+          baseFileName,
           true
         );
         if (content === undefined) {
@@ -163,9 +176,33 @@ export class TfcFileSystemProvider implements vscode.FileSystemProvider {
         } else {
           return encoder.encode(content);
         }
-      default:
-        return undefined;
+      case "/plans/log":
+        return encoder.encode(
+          await tfchelper.getPlanLog(
+            await tfchelper.createClient(this.config),
+            baseFileName,
+            false
+          )
+        );
+      case "/plans/json":
+        return encoder.encode(
+          await tfchelper.getPlanJson(
+            await tfchelper.createClient(this.config),
+            baseFileName,
+            false
+          )
+        );
+        case "/applies/log":
+        return encoder.encode(
+          await tfchelper.getApplyLog(
+            await tfchelper.createClient(this.config),
+            baseFileName,
+            false
+          )
+        );
     }
+
+    return undefined;
   }
 }
 
